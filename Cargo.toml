@@ -1,0 +1,4 @@
+[package]
+name = "qqg"
+edition = "2024"
+version = "0.0.1"
