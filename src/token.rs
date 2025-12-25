@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Debug)]
 pub enum Token {
@@ -54,8 +54,8 @@ pub struct Error {
     err: ErrorKind,
 }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         let msg = match self.err {
             ErrorKind::Token => "invalid token",
             ErrorKind::String => "invalid string",
