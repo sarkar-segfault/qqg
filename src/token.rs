@@ -11,6 +11,7 @@ pub enum Token {
     Answer,
     Style,
     Title,
+    Show,
     Has,
     In,
     By,
@@ -39,21 +40,29 @@ pub enum Token {
 }
 
 #[derive(Debug)]
-pub enum Error {
-    InvalidToken,
-    InvalidString,
-    InvalidKeyword,
+pub enum ErrorKind {
+    Token,
+    String,
+    Keyword,
+}
+
+#[derive(Debug)]
+pub struct Error {
+    file: String,
+    line: usize,
+    col: usize,
+    err: ErrorKind,
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let msg = match self {
-            Error::InvalidToken => "invalid token",
-            Error::InvalidString => "invalid string",
-            Error::InvalidKeyword => "invalid keyword",
+        let msg = match self.err {
+            ErrorKind::Token => "invalid token",
+            ErrorKind::String => "invalid string",
+            ErrorKind::Keyword => "invalid keyword",
         };
 
-        write!(f, "{}", msg)
+        write!(f, "[{}:{}:{}] {}", self.file, self.line, self.col, msg)
     }
 }
 
@@ -61,26 +70,33 @@ impl std::error::Error for Error {}
 
 pub type Result = std::result::Result<Vec<Token>, Error>;
 
-pub fn ize(input: &str) -> Result {
+pub fn ize(input: String, file: String) -> Result {
     let mut tokens: Vec<Token> = Vec::new();
     let mut chars = input.chars().peekable();
+    let mut line: usize = 1;
+    let mut col: usize = 1;
 
     while let Some(&c) = chars.peek() {
         tokens.push(match c {
             '{' => {
                 chars.next();
+                col += 1;
                 Token::LBrace
             }
             '}' => {
                 chars.next();
+                col += 1;
                 Token::RBrace
             }
             ',' => {
                 chars.next();
+                col += 1;
                 Token::Comma
             }
             '"' => {
                 chars.next();
+                col += 1;
+
                 let mut closed = false;
                 let mut content = String::new();
 
@@ -88,15 +104,22 @@ pub fn ize(input: &str) -> Result {
                     if n == '"' {
                         closed = true;
                         chars.next();
+                        col += 1;
                         break;
                     } else {
                         content.push(n);
                         chars.next();
+                        col += 1;
                     }
                 }
 
                 if !closed {
-                    return Err(Error::InvalidString);
+                    return Err(Error {
+                        file,
+                        line,
+                        col,
+                        err: ErrorKind::String,
+                    });
                 }
 
                 Token::String(content)
@@ -110,6 +133,7 @@ pub fn ize(input: &str) -> Result {
                     }
                     content.push(n);
                     chars.next();
+                    col += 1;
                 }
 
                 match content.as_str() {
@@ -117,6 +141,7 @@ pub fn ize(input: &str) -> Result {
                     "answer" => Token::Answer,
                     "style" => Token::Style,
                     "title" => Token::Title,
+                    "show" => Token::Show,
                     "has" => Token::Has,
                     "in" => Token::In,
                     "by" => Token::By,
@@ -142,16 +167,34 @@ pub fn ize(input: &str) -> Result {
                     "blink" => Token::Blink,
                     "bold" => Token::Bold,
                     "dim" => Token::Dim,
-                    _ => return Err(Error::InvalidKeyword),
+                    _ => {
+                        return Err(Error {
+                            file,
+                            line,
+                            col,
+                            err: ErrorKind::Keyword,
+                        });
+                    }
                 }
+            }
+            _ if c == '\n' => {
+                chars.next();
+                line += 1;
+                col = 1;
+                continue;
             }
             _ if c.is_whitespace() => {
                 chars.next();
+                col += 1;
                 continue;
             }
             _ => {
-                println!("{}", c);
-                return Err(Error::InvalidToken);
+                return Err(Error {
+                    file,
+                    line,
+                    col,
+                    err: ErrorKind::Token,
+                });
             }
         });
     }
