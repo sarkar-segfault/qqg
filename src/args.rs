@@ -1,16 +1,13 @@
-use crate::styles::link;
+use crate::{err, link};
 use std::process::exit;
 
 #[derive(Default)]
 pub struct Info {
     pub file: String,
-    pub verbose: bool,
-    pub output: String,
     pub styles: Vec<String>,
     pub scripts: Vec<String>,
 }
 
-#[inline(always)]
 fn version() {
     println!(
         "qqg (quick quiz generator) version {}",
@@ -18,75 +15,71 @@ fn version() {
     )
 }
 
-#[inline(always)]
 fn help() {
     version();
     println!("generate web and console-based quizzes blazingly fast");
     println!(
-        "written in {} by {}, licensed under the GPL v3.0",
-        link("rust-lang", "https://github.com/rust-lang"),
-        link("sarkar-segfault", "https://github.com/sarkar-segfault")
+        "written in {} by {}, licensed under {}",
+        link!("rust-lang", "https://github.com/rust-lang"),
+        link!("sarkar-segfault", "https://github.com/sarkar-segfault"),
+        link!("gpl v3.0", "https://www.gnu.org/licenses/gpl-3.0.html")
     );
     println!(
-        "for more information, refer to {}\n",
-        link(
-            "the qqg github repository",
+        "for more information, refer to the {}\n",
+        link!(
+            "qqg github repository",
             "https://github.com/sarkar-segfault/qqg.git"
         )
     );
 
-    println!(
-        "usage: qqg [--help|--version|--verbose|--output <output.html>|--style <styles.css>|--script <script.js>] <input.qq>"
-    );
-    println!("--help: prints this message and exits");
-    println!("--version: prints the version and exits");
-    println!("--verbose: toggle extensive log messages");
-    println!("--output <output.html>: specify the output file (for web)");
-    println!("--style <style.css>: specify stylesheets (for web)");
-    println!("--script <script.js>: specify scripts (for web)");
-    println!("<file>: the input quiz file")
+    println!("usage: qqg [-v|-h|-i <input.qq>|-c <styles.css>|-j <script.js>]");
+    println!("\t-v: prints the version and exits");
+    println!("\t-h: prints this message and exits");
+    println!("\t-i <input.qq>: specify the input quiz file");
+    println!("\t-j <script.js>: specify a script file (web)");
+    println!("\t-c <styles.css>: specify a stylesheet (web)");
 }
 
 pub fn parse() -> Info {
     let mut args = std::env::args();
     let mut info = Info::default();
+    let mut index = 1;
     args.next();
 
     while let Some(arg) = args.next() {
-        if arg == "--version" {
+        if arg == "-v" {
             version();
             exit(0);
-        } else if arg == "--help" {
+        } else if arg == "-h" {
             help();
             exit(0);
-        } else if arg == "--verbose" {
-            info.verbose = !info.verbose;
-        } else if arg == "--output" {
-            if let Some(output) = args.next() {
-                info.output = output;
+        } else if arg == "-i" {
+            if let Some(input) = args.next() {
+                info.file = input;
             } else {
-                eprintln!("expected output file after --output");
+                err!("expected input file after -i");
             }
-        } else if arg == "--style" {
+        } else if arg == "-c" {
             if let Some(style) = args.next() {
                 info.styles.push(style);
             } else {
-                eprintln!("expected stylesheet after --style");
+                err!("expected stylesheet after -c");
             }
-        } else if arg == "--script" {
+        } else if arg == "-j" {
             if let Some(script) = args.next() {
                 info.scripts.push(script);
             } else {
-                eprintln!("expected script after --script");
+                err!("expected script file after -j");
             }
         } else {
-            info.file = arg;
+            err!("got malformed argument at {}", index);
         }
+
+        index += 1;
     }
 
     if info.file.is_empty() {
-        eprintln!("expected input file to be provided");
-        exit(1);
+        err!("expected input file to be provided");
     }
 
     info

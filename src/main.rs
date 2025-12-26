@@ -1,9 +1,8 @@
 mod args;
-mod styles;
 mod token;
+mod utils;
 
 use std::fs::read_to_string;
-use std::process::exit;
 
 fn main() {
     let info = args::parse();
@@ -11,14 +10,12 @@ fn main() {
         "{:?}",
         token::ize(
             read_to_string(&info.file).unwrap_or_else(|e| {
-                eprintln!("1: {}", e);
-                exit(1);
+                err!(e);
             }),
             info.file
         )
         .unwrap_or_else(|e| {
-            eprintln!("2: {}", e);
-            exit(1);
+            err!(e);
         })
     )
 }
