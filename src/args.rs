@@ -1,6 +1,9 @@
-use crate::{err, link};
+//! provides functions and structs related to command-line argument parsing
+
+use crate::err;
 use std::process::exit;
 
+/// represents arguments parsed from the command-line
 #[derive(Default)]
 pub struct Info {
     pub file: String,
@@ -8,28 +11,27 @@ pub struct Info {
     pub scripts: Vec<String>,
 }
 
+/// prints the version line
 fn version() {
     println!(
-        "qqg (quick quiz generator) version {}",
+        "{}, version {}",
+        env!("CARGO_PKG_NAME"),
         env!("CARGO_PKG_VERSION")
     )
 }
 
+/// prints help information
 fn help() {
     version();
-    println!("generate web and console-based quizzes blazingly fast");
+    println!(env!("CARGO_PKG_DESCRIPTION"));
     println!(
-        "written in {} by {}, licensed under {}",
-        link!("rust-lang", "https://github.com/rust-lang"),
-        link!("sarkar-segfault", "https://github.com/sarkar-segfault"),
-        link!("gpl v3.0", "https://www.gnu.org/licenses/gpl-3.0.html")
+        "created by {} and licensed under {}",
+        env!("CARGO_PKG_AUTHORS"),
+        env!("CARGO_PKG_LICENSE")
     );
     println!(
-        "for more information, refer to the {}\n",
-        link!(
-            "qqg github repository",
-            "https://github.com/sarkar-segfault/qqg.git"
-        )
+        "home at {}\ndocs at https://docs.rs/quick-quiz-generator\n",
+        env!("CARGO_PKG_HOMEPAGE")
     );
 
     println!("usage: qqg [-v|-h|-i <input.qq>|-c <styles.css>|-j <script.js>]");
@@ -40,6 +42,13 @@ fn help() {
     println!("\t-c <styles.css>: specify a stylesheet (web)");
 }
 
+/// parses command-line arguments into a [`Info`]
+///
+/// # exits with success
+/// if `-v` or `-h` is detected
+///
+/// # exits with failure
+/// if a filename is missing after `-i`, `-c`, or `-j`; or if `-i` is not provided
 pub fn parse() -> Info {
     let mut args = std::env::args();
     let mut info = Info::default();

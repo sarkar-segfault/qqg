@@ -1,7 +1,8 @@
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use crate::utils::{Error, ErrorKind, Location, Result};
 
-#[derive(Debug)]
-pub enum Token {
+/// represents the different types of tokens
+#[derive(PartialEq, Debug, Eq)]
+pub enum TokenKind {
     String(String),
     LBrace,
     RBrace,
@@ -13,7 +14,7 @@ pub enum Token {
     Title,
     Show,
     Has,
-    In,
+    Is,
     By,
 
     Fg,
@@ -39,63 +40,47 @@ pub enum Token {
     Dim,
 }
 
-#[derive(Debug)]
-pub enum ErrorKind {
-    Token,
-    String,
-    Keyword,
+/// represents a token, with location information
+pub struct Token {
+    pub kind: TokenKind,
+    pub loc: Location,
 }
 
-#[derive(Debug)]
-pub struct Error {
-    file: String,
-    line: usize,
-    col: usize,
-    err: ErrorKind,
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        let msg = match self.err {
-            ErrorKind::Token => "invalid token",
-            ErrorKind::String => "invalid string",
-            ErrorKind::Keyword => "invalid keyword",
-        };
-
-        write!(f, "[{}:{}:{}] {}", self.file, self.line, self.col, msg)
-    }
-}
-
-impl std::error::Error for Error {}
-
-pub type Result = std::result::Result<Vec<Token>, Error>;
-
-pub fn ize(input: String, file: String) -> Result {
+/// tokenizes a String into a vector of [`Token`]
+pub fn ize(input: String, file: String) -> Result<Vec<Token>> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut chars = input.chars().peekable();
-    let mut line: usize = 1;
-    let mut col: usize = 1;
+    let mut loc = Location::default();
 
     while let Some(&c) = chars.peek() {
         tokens.push(match c {
             '{' => {
                 chars.next();
-                col += 1;
-                Token::LBrace
+                loc.col += 1;
+                Token {
+                    kind: TokenKind::LBrace,
+                    loc,
+                }
             }
             '}' => {
                 chars.next();
-                col += 1;
-                Token::RBrace
+                loc.col += 1;
+                Token {
+                    kind: TokenKind::RBrace,
+                    loc,
+                }
             }
             ',' => {
                 chars.next();
-                col += 1;
-                Token::Comma
+                loc.col += 1;
+                Token {
+                    kind: TokenKind::Comma,
+                    loc,
+                }
             }
             '"' => {
                 chars.next();
-                col += 1;
+                loc.col += 1;
 
                 let mut closed = false;
                 let mut content = String::new();
@@ -104,25 +89,27 @@ pub fn ize(input: String, file: String) -> Result {
                     if n == '"' {
                         closed = true;
                         chars.next();
-                        col += 1;
+                        loc.col += 1;
                         break;
                     } else {
                         content.push(n);
                         chars.next();
-                        col += 1;
+                        loc.col += 1;
                     }
                 }
 
                 if !closed {
                     return Err(Error {
+                        loc,
                         file,
-                        line,
-                        col,
-                        err: ErrorKind::String,
+                        kind: ErrorKind::MalformedString,
                     });
                 }
 
-                Token::String(content)
+                Token {
+                    kind: TokenKind::String(content),
+                    loc,
+                }
             }
             _ if c.is_alphanumeric() => {
                 let mut content = String::new();
@@ -133,67 +120,76 @@ pub fn ize(input: String, file: String) -> Result {
                     }
                     content.push(n);
                     chars.next();
-                    col += 1;
+                    loc.col += 1;
                 }
 
-                match content.as_str() {
-                    "question" => Token::Question,
-                    "answer" => Token::Answer,
-                    "style" => Token::Style,
-                    "title" => Token::Title,
-                    "show" => Token::Show,
-                    "has" => Token::Has,
-                    "in" => Token::In,
-                    "by" => Token::By,
+                let kind = match content.as_str() {
+                    "question" => TokenKind::Question,
+                    "answer" => TokenKind::Answer,
+                    "style" => TokenKind::Style,
+                    "title" => TokenKind::Title,
+                    "show" => TokenKind::Show,
+                    "has" => TokenKind::Has,
+                    "is" => TokenKind::Is,
+                    "by" => TokenKind::By,
 
-                    "fg" => Token::Fg,
-                    "bg" => Token::Bg,
-                    "br" => Token::Br,
+                    "fg" => TokenKind::Fg,
+                    "bg" => TokenKind::Bg,
+                    "br" => TokenKind::Br,
 
-                    "magenta" => Token::Magenta,
-                    "yellow" => Token::Yellow,
-                    "green" => Token::Green,
-                    "white" => Token::White,
-                    "black" => Token::Black,
-                    "blue" => Token::Blue,
-                    "cyan" => Token::Cyan,
-                    "red" => Token::Red,
+                    "magenta" => TokenKind::Magenta,
+                    "yellow" => TokenKind::Yellow,
+                    "green" => TokenKind::Green,
+                    "white" => TokenKind::White,
+                    "black" => TokenKind::Black,
+                    "blue" => TokenKind::Blue,
+                    "cyan" => TokenKind::Cyan,
+                    "red" => TokenKind::Red,
 
-                    "underline" => Token::Underline,
-                    "strike" => Token::Strike,
-                    "italic" => Token::Italic,
-                    "invert" => Token::Invert,
-                    "hidden" => Token::Hidden,
-                    "blink" => Token::Blink,
-                    "bold" => Token::Bold,
-                    "dim" => Token::Dim,
+                    "underline" => TokenKind::Underline,
+                    "strike" => TokenKind::Strike,
+                    "italic" => TokenKind::Italic,
+                    "invert" => TokenKind::Invert,
+                    "hidden" => TokenKind::Hidden,
+                    "blink" => TokenKind::Blink,
+                    "bold" => TokenKind::Bold,
+                    "dim" => TokenKind::Dim,
                     _ => {
                         return Err(Error {
+                            loc,
                             file,
-                            line,
-                            col,
-                            err: ErrorKind::Keyword,
+                            kind: ErrorKind::InvalidKeyword,
                         });
                     }
+                };
+                Token { kind, loc }
+            }
+            _ if c == '#' => {
+                while let Some(&n) = chars.peek() {
+                    chars.next();
+                    loc.col += 1;
+                    if n == '\n' {
+                        break;
+                    }
                 }
+                continue;
             }
             _ if c == '\n' => {
                 chars.next();
-                line += 1;
-                col = 1;
+                loc.line += 1;
+                loc.col = 1;
                 continue;
             }
             _ if c.is_whitespace() => {
                 chars.next();
-                col += 1;
+                loc.col += 1;
                 continue;
             }
             _ => {
                 return Err(Error {
+                    loc,
                     file,
-                    line,
-                    col,
-                    err: ErrorKind::Token,
+                    kind: ErrorKind::UnexpectedToken,
                 });
             }
         });
