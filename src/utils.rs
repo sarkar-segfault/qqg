@@ -1,5 +1,6 @@
 //! provides utilities used throughout the project, such as error handling
 
+use crate::token::TokenKind;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 /// represents the different kinds of errors that can occur
@@ -7,9 +8,11 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 /// covers tokenization, parsing, and more.
 #[derive(Debug)]
 pub enum ErrorKind {
-    UnexpectedToken,
-    MalformedString,
-    InvalidKeyword,
+    UnexpectedToken(String, String),
+    InvalidKeyword(String),
+    UnterminatedString,
+    UnexpectedEnd,
+    BadToken,
 }
 
 /// represents a location, with line and column number
@@ -35,10 +38,17 @@ impl Display for Error {
             self.file,
             self.loc.line,
             self.loc.col,
-            match self.kind {
-                ErrorKind::UnexpectedToken => "encountered unexpected token during tokenization",
-                ErrorKind::MalformedString => "encountered malformed string during tokenization",
-                ErrorKind::InvalidKeyword => "encountered invalid keyword during tokenization",
+            match &self.kind {
+                ErrorKind::UnexpectedToken(expect, found) => format!(
+                    "encountered unexpected token during tokenization\nexpected {:?}, found {:?}",
+                    expect, found
+                ),
+                ErrorKind::InvalidKeyword(kw) =>
+                    format!("encountered invalid keyword during tokenization: {}", kw),
+                ErrorKind::UnterminatedString =>
+                    "encountered unterminated string during tokenization".into(),
+                ErrorKind::BadToken => "encountered bad token during tokenization".into(),
+                ErrorKind::UnexpectedEnd => "encountered unexpected end-of-file".into(),
             }
         )
     }

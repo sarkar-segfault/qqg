@@ -1,7 +1,9 @@
+//! defines components for tokenizing functionality
+
 use crate::utils::{Error, ErrorKind, Location, Result};
 
 /// represents the different types of tokens
-#[derive(PartialEq, Debug, Eq)]
+#[derive(PartialEq, Debug, Eq, Clone)]
 pub enum TokenKind {
     String(String),
     LBrace,
@@ -46,8 +48,8 @@ pub struct Token {
     pub loc: Location,
 }
 
-/// tokenizes a String into a vector of [`Token`]
-pub fn ize(input: String, file: String) -> Result<Vec<Token>> {
+/// tokenizes a [`String`] into a [`Vec`] of [`Token`]
+pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut chars = input.chars().peekable();
     let mut loc = Location::default();
@@ -101,8 +103,8 @@ pub fn ize(input: String, file: String) -> Result<Vec<Token>> {
                 if !closed {
                     return Err(Error {
                         loc,
-                        file,
-                        kind: ErrorKind::MalformedString,
+                        file: file.into(),
+                        kind: ErrorKind::UnterminatedString,
                     });
                 }
 
@@ -157,8 +159,8 @@ pub fn ize(input: String, file: String) -> Result<Vec<Token>> {
                     _ => {
                         return Err(Error {
                             loc,
-                            file,
-                            kind: ErrorKind::InvalidKeyword,
+                            file: file.into(),
+                            kind: ErrorKind::InvalidKeyword(content),
                         });
                     }
                 };
@@ -188,8 +190,8 @@ pub fn ize(input: String, file: String) -> Result<Vec<Token>> {
             _ => {
                 return Err(Error {
                     loc,
-                    file,
-                    kind: ErrorKind::UnexpectedToken,
+                    file: file.into(),
+                    kind: ErrorKind::BadToken,
                 });
             }
         });
