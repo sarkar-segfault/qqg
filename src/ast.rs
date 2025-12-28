@@ -63,13 +63,11 @@ pub struct Program {
 fn next(tokens: &mut Vec<Token>, last_loc: Location, file: &String) -> Result<Token> {
     match tokens.pop() {
         Some(t) => Ok(t),
-        None => {
-            return Err(Error {
-                loc: last_loc,
-                file: file.into(),
-                kind: ErrorKind::UnexpectedEnd,
-            });
-        }
+        None => Err(Error {
+            loc: last_loc,
+            file: file.into(),
+            kind: ErrorKind::UnexpectedEnd,
+        }),
     }
 }
 
@@ -99,24 +97,21 @@ fn parse_meta(tokens: &mut Vec<Token>, last_loc: Location, file: &String) -> Res
         Err(_) => return Ok(meta),
     };
 
-    match token2.kind {
-        TokenKind::By => {
-            let token3 = next(tokens, token2.loc, file)?;
-            match token3.kind {
-                TokenKind::String(s) => meta.by = s,
-                _ => {
-                    return Err(Error {
-                        loc: token3.loc,
-                        file: file.into(),
-                        kind: ErrorKind::UnexpectedToken(
-                            "String(...)".into(),
-                            format!("{:?}", token3.kind),
-                        ),
-                    });
-                }
+    if token2.kind == TokenKind::By {
+        let token3 = next(tokens, token2.loc, file)?;
+        match token3.kind {
+            TokenKind::String(s) => meta.by = s,
+            _ => {
+                return Err(Error {
+                    loc: token3.loc,
+                    file: file.into(),
+                    kind: ErrorKind::UnexpectedToken(
+                        "String(...)".into(),
+                        format!("{:?}", token3.kind),
+                    ),
+                });
             }
         }
-        _ => (),
     }
 
     Ok(meta)
@@ -129,7 +124,7 @@ pub fn ify(mut tokens: Vec<Token>, file: &String) -> Result<Program> {
 
     while let Some(token) = tokens.pop() {
         match token.kind {
-            TokenKind::Title => prog.meta = parse_meta(&mut tokens, token.loc, &file)?,
+            TokenKind::Title => prog.meta = parse_meta(&mut tokens, token.loc, file)?,
             _ => {
                 return Err(Error {
                     loc: token.loc,

@@ -1,6 +1,5 @@
 //! provides utilities used throughout the project, such as error handling
 
-use crate::token::TokenKind;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 /// represents the different kinds of errors that can occur
