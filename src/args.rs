@@ -1,9 +1,6 @@
-//! provides functions and structs related to command-line argument parsing
-
 use crate::err;
 use std::process::exit;
 
-/// represents arguments parsed from the command-line
 #[derive(Default)]
 pub struct Info {
     pub file: String,
@@ -11,7 +8,6 @@ pub struct Info {
     pub scripts: Vec<String>,
 }
 
-/// prints the version line
 fn version() {
     println!(
         "{}, version {}",
@@ -20,7 +16,6 @@ fn version() {
     )
 }
 
-/// prints help information
 fn help() {
     version();
     println!(env!("CARGO_PKG_DESCRIPTION"));
@@ -29,10 +24,7 @@ fn help() {
         env!("CARGO_PKG_AUTHORS"),
         env!("CARGO_PKG_LICENSE")
     );
-    println!(
-        "home at {}\ndocs at https://docs.rs/quick-quiz-generator\n",
-        env!("CARGO_PKG_HOMEPAGE")
-    );
+    println!("home at {}", env!("CARGO_PKG_HOMEPAGE"));
 
     println!("usage: qqg [-v|-h|-i <input.qq>|-c <styles.css>|-j <script.js>]");
     println!("\t-v: prints the version and exits");
@@ -42,13 +34,6 @@ fn help() {
     println!("\t-c <styles.css>: specify a stylesheet (web)");
 }
 
-/// parses command-line arguments into a [`Info`]
-///
-/// # exits with success
-/// if `-v` or `-h` is detected
-///
-/// # exits with failure
-/// if a filename is missing after `-i`, `-c`, or `-j`; or if `-i` is not provided
 pub fn parse() -> Info {
     let mut args = std::env::args();
     let mut info = Info::default();
