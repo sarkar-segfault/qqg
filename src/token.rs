@@ -103,7 +103,7 @@ pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
                 if !closed {
                     return Err(Error {
                         loc,
-                        file: file.into(),
+                        file: &file,
                         kind: ErrorKind::UnterminatedString,
                     });
                 }
@@ -159,7 +159,7 @@ pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
                     _ => {
                         return Err(Error {
                             loc,
-                            file: file.into(),
+                            file: &file,
                             kind: ErrorKind::InvalidKeyword(content),
                         });
                     }
@@ -190,8 +190,8 @@ pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
             _ => {
                 return Err(Error {
                     loc,
-                    file: file.into(),
-                    kind: ErrorKind::BadToken,
+                    file: &file,
+                    kind: ErrorKind::UnrecognizedToken,
                 });
             }
         });
