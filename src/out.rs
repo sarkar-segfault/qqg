@@ -8,20 +8,19 @@ pub fn console(prog: Program) {
     let mut total: isize = 0;
 
     for question in prog.questions {
-        print!("{}\n=> ", question.text);
+        print!("{} [{}]\n=> ", question.text, question.value);
         stdout().flush().unwrap_or_else(|e| err!(e));
         let mut answer = String::new();
         stdin().read_line(&mut answer).unwrap_or_else(|e| err!(e));
         let answer = answer.trim().to_string();
 
         if question.answer.contains(&answer) {
-            print!("correct answer! ");
+            println!("correct answer!\n");
             score += question.value;
         } else {
-            println!("\nwrong answer!\n=> {:?}", question.answer);
+            println!("\nwrong answer!\n=> {:?}\n", question.answer);
         }
 
-        println!("score changed by {}\n", question.value);
         total += question.value;
     }
 
