@@ -9,6 +9,8 @@ pub enum ErrorKind {
     UnexpectedEnd,
     ExpectedString,
     MissingBrace,
+    MalformedNumber,
+    ExpectedComma,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -42,6 +44,9 @@ impl Display for Error {
                 ErrorKind::UnexpectedEnd =>
                     "encountered unexpected end-of-file during parsing".into(),
                 ErrorKind::MissingBrace => "expected brace during parsing".into(),
+                ErrorKind::MalformedNumber =>
+                    "encountered malformed number during toknization".into(),
+                ErrorKind::ExpectedComma => "expected comma during parsing".into(),
                 ErrorKind::ExpectedString => "expected string during parsing".into(),
             }
         )

@@ -1,28 +1,20 @@
 use crate::token::{Token, TokenKind};
 use crate::utils::{Error, ErrorKind, Location, Result};
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct Meta {
     pub title: String,
     pub by: String,
 }
 
-#[derive(Debug, Default)]
-pub struct Answer {
-    pub has: Vec<String>,
-    pub is: Vec<String>,
-}
-
-pub type Style = Vec<TokenKind>;
-
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct Question {
     pub text: String,
-    pub answer: Answer,
-    pub style: Style,
+    pub answer: Vec<String>,
+    pub value: isize,
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct Program {
     pub meta: Meta,
     pub questions: Vec<Question>,
@@ -31,13 +23,11 @@ pub struct Program {
 fn next(tokens: &mut Vec<Token>, loc: Location, file: &str) -> Result<Token> {
     match tokens.pop() {
         Some(token) => Ok(token),
-        None => {
-            return Err(Error {
-                loc,
-                file: file.into(),
-                kind: ErrorKind::UnexpectedEnd,
-            });
-        }
+        None => Err(Error {
+            loc,
+            file: file.into(),
+            kind: ErrorKind::UnexpectedEnd,
+        }),
     }
 }
 
@@ -99,37 +89,70 @@ fn parse_meta(tokens: &mut Vec<Token>, loc: Location, file: &str) -> Result<Meta
     Ok(meta)
 }
 
-fn parse_answer(tokens: &mut Vec<Token>, loc: Location, file: &str) -> Result<Answer> {
+fn parse_question(tokens: &mut Vec<Token>, loc: Location, file: &str) -> Result<Question> {
+    let text = next(tokens, loc, file)?;
+    let mut ques = Question::default();
+    match text.kind {
+        TokenKind::String(txt) => ques.text = txt,
+        _ => {
+            return Err(Error {
+                loc: text.loc,
+                file: file.into(),
+                kind: ErrorKind::ExpectedString,
+            });
+        }
+    }
     let a_lbrace = expect(
         TokenKind::LBrace,
         ErrorKind::MissingBrace,
         tokens,
-        loc,
+        text.loc,
         file,
     )?;
-    let mut answ = Answer::default();
+
     let mut something = next(tokens, a_lbrace.loc, file)?;
     loop {
         match something.kind {
             TokenKind::RBrace => break,
-            TokenKind::Has | TokenKind::Is => {
-                let origin = something.clone();
-                let a_lbrace2 = expect(
+            TokenKind::Value => {
+                something = next(tokens, something.loc, file)?;
+                if let TokenKind::Number(value) = something.kind {
+                    ques.value = value;
+                } else {
+                    return Err(Error {
+                        loc: something.loc,
+                        file: file.into(),
+                        kind: ErrorKind::UnexpectedToken,
+                    });
+                }
+                something = expect(
+                    TokenKind::Comma,
+                    ErrorKind::ExpectedComma,
+                    tokens,
+                    something.loc,
+                    file,
+                )?;
+            }
+            TokenKind::Answer => {
+                something = expect(
                     TokenKind::LBrace,
                     ErrorKind::MissingBrace,
                     tokens,
                     something.loc,
                     file,
                 )?;
-                something = next(tokens, a_lbrace2.loc, file)?;
+                something = next(tokens, something.loc, file)?;
                 loop {
                     match something.kind {
-                        TokenKind::String(ref s) => {
-                            if origin.kind == TokenKind::Has {
-                                answ.has.push(s.clone())
-                            } else {
-                                answ.is.push(s.clone())
-                            }
+                        TokenKind::String(s) => {
+                            ques.answer.push(s);
+                            something = expect(
+                                TokenKind::Comma,
+                                ErrorKind::ExpectedComma,
+                                tokens,
+                                something.loc,
+                                file,
+                            )?;
                         }
                         TokenKind::RBrace => break,
                         _ => {
@@ -142,6 +165,13 @@ fn parse_answer(tokens: &mut Vec<Token>, loc: Location, file: &str) -> Result<An
                     }
                     something = next(tokens, something.loc, file)?;
                 }
+                something = expect(
+                    TokenKind::Comma,
+                    ErrorKind::ExpectedComma,
+                    tokens,
+                    something.loc,
+                    file,
+                )?;
             }
             _ => {
                 return Err(Error {
@@ -151,97 +181,6 @@ fn parse_answer(tokens: &mut Vec<Token>, loc: Location, file: &str) -> Result<An
                 });
             }
         }
-        something = next(tokens, something.loc, file)?;
-    }
-
-    Ok(answ)
-}
-
-fn parse_style(tokens: &mut Vec<Token>, loc: Location, file: &str) -> Result<Style> {
-    let s_lbrace = expect(
-        TokenKind::LBrace,
-        ErrorKind::MissingBrace,
-        tokens,
-        loc,
-        file,
-    )?;
-    let mut style = Style::default();
-    let mut something = next(tokens, s_lbrace.loc, file)?;
-
-    loop {
-        match something.kind {
-            TokenKind::RBrace => break,
-            TokenKind::Bold
-            | TokenKind::Italic
-            | TokenKind::Underline
-            | TokenKind::Strike
-            | TokenKind::Invert
-            | TokenKind::Hidden
-            | TokenKind::Blink
-            | TokenKind::Dim
-            | TokenKind::Fg
-            | TokenKind::Bg
-            | TokenKind::Br
-            | TokenKind::Magenta
-            | TokenKind::Yellow
-            | TokenKind::Green
-            | TokenKind::White
-            | TokenKind::Black
-            | TokenKind::Blue
-            | TokenKind::Cyan
-            | TokenKind::Red => style.push(something.kind),
-            _ => {
-                return Err(Error {
-                    loc: something.loc,
-                    file: file.into(),
-                    kind: ErrorKind::UnexpectedToken,
-                });
-            }
-        }
-        something = next(tokens, something.loc, file)?;
-    }
-
-    Ok(style)
-}
-
-fn parse_question(tokens: &mut Vec<Token>, loc: Location, file: &str) -> Result<Question> {
-    let text = next(tokens, loc, file)?;
-    let mut ques = Question::default();
-
-    match text.kind {
-        TokenKind::String(txt) => ques.text = txt,
-        _ => {
-            return Err(Error {
-                loc: text.loc,
-                file: file.into(),
-                kind: ErrorKind::ExpectedString,
-            });
-        }
-    }
-
-    let q_lbrace = expect(
-        TokenKind::LBrace,
-        ErrorKind::MissingBrace,
-        tokens,
-        text.loc,
-        file,
-    )?;
-
-    let mut something = next(tokens, q_lbrace.loc, file)?;
-    loop {
-        match something.kind {
-            TokenKind::RBrace => break,
-            TokenKind::Answer => ques.answer = parse_answer(tokens, something.loc, file)?,
-            TokenKind::Style => ques.style = parse_style(tokens, something.loc, file)?,
-            _ => {
-                return Err(Error {
-                    loc: something.loc,
-                    file: file.into(),
-                    kind: ErrorKind::UnexpectedToken,
-                });
-            }
-        }
-
         something = next(tokens, something.loc, file)?;
     }
 

@@ -3,38 +3,16 @@ use crate::utils::{Error, ErrorKind, Location, Result};
 #[derive(PartialEq, Debug, Eq, Clone)]
 pub enum TokenKind {
     String(String),
+    Number(isize),
     LBrace,
     RBrace,
+    Comma,
 
     Question,
     Answer,
-    Style,
+    Value,
     Title,
-    Has,
-    Is,
     By,
-
-    Fg,
-    Bg,
-    Br,
-
-    Magenta,
-    Yellow,
-    Green,
-    White,
-    Black,
-    Blue,
-    Cyan,
-    Red,
-
-    Underline,
-    Strike,
-    Italic,
-    Invert,
-    Hidden,
-    Blink,
-    Bold,
-    Dim,
 }
 
 #[derive(Clone, Debug)]
@@ -66,6 +44,15 @@ pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
                 Token {
                     kind: TokenKind::RBrace,
                     loc: tloc,
+                }
+            }
+            ',' => {
+                let tloc = loc;
+                chars.next();
+                loc.col += 1;
+                Token {
+                    loc: tloc,
+                    kind: TokenKind::Comma,
                 }
             }
             '"' => {
@@ -102,6 +89,55 @@ pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
                     loc: tloc,
                 }
             }
+            '-' => {
+                let tloc = loc;
+                let mut content = String::new();
+                chars.next();
+                loc.col += 1;
+
+                while let Some(&n) = chars.peek() {
+                    if !n.is_numeric() {
+                        break;
+                    }
+                    chars.next();
+                    loc.col += 1;
+                    content.push(n);
+                }
+
+                let number = content.parse::<isize>().map_err(|_| Error {
+                    loc: tloc,
+                    file: file.into(),
+                    kind: ErrorKind::MalformedNumber,
+                })?;
+
+                Token {
+                    kind: TokenKind::Number(-number),
+                    loc: tloc,
+                }
+            }
+            _ if c.is_numeric() => {
+                let tloc = loc;
+                let mut content = String::new();
+
+                while let Some(&n) = chars.peek() {
+                    if !n.is_numeric() {
+                        break;
+                    }
+                    chars.next();
+                    loc.col += 1;
+                    content.push(n);
+                }
+
+                let number = content.parse::<isize>().map_err(|_| Error {
+                    loc: tloc,
+                    file: file.into(),
+                    kind: ErrorKind::MalformedNumber,
+                })?;
+                Token {
+                    kind: TokenKind::Number(number),
+                    loc: tloc,
+                }
+            }
             _ if c.is_alphanumeric() => {
                 let tloc = loc;
                 let mut content = String::new();
@@ -118,33 +154,9 @@ pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
                 let kind = match content.as_str() {
                     "question" => TokenKind::Question,
                     "answer" => TokenKind::Answer,
-                    "style" => TokenKind::Style,
+                    "value" => TokenKind::Value,
                     "title" => TokenKind::Title,
-                    "has" => TokenKind::Has,
-                    "is" => TokenKind::Is,
                     "by" => TokenKind::By,
-
-                    "fg" => TokenKind::Fg,
-                    "bg" => TokenKind::Bg,
-                    "br" => TokenKind::Br,
-
-                    "magenta" => TokenKind::Magenta,
-                    "yellow" => TokenKind::Yellow,
-                    "green" => TokenKind::Green,
-                    "white" => TokenKind::White,
-                    "black" => TokenKind::Black,
-                    "blue" => TokenKind::Blue,
-                    "cyan" => TokenKind::Cyan,
-                    "red" => TokenKind::Red,
-
-                    "underline" => TokenKind::Underline,
-                    "strike" => TokenKind::Strike,
-                    "italic" => TokenKind::Italic,
-                    "invert" => TokenKind::Invert,
-                    "hidden" => TokenKind::Hidden,
-                    "blink" => TokenKind::Blink,
-                    "bold" => TokenKind::Bold,
-                    "dim" => TokenKind::Dim,
                     _ => {
                         return Err(Error {
                             loc,
