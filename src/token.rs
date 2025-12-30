@@ -5,13 +5,11 @@ pub enum TokenKind {
     String(String),
     LBrace,
     RBrace,
-    Comma,
 
     Question,
     Answer,
     Style,
     Title,
-    Show,
     Has,
     Is,
     By,
@@ -39,6 +37,7 @@ pub enum TokenKind {
     Dim,
 }
 
+#[derive(Clone, Debug)]
 pub struct Token {
     pub kind: TokenKind,
     pub loc: Location,
@@ -47,35 +46,30 @@ pub struct Token {
 pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut chars = input.chars().peekable();
-    let mut loc = Location::default();
+    let mut loc = Location { line: 1, col: 1 };
 
     while let Some(&c) = chars.peek() {
         tokens.push(match c {
             '{' => {
+                let tloc = loc;
                 chars.next();
                 loc.col += 1;
                 Token {
                     kind: TokenKind::LBrace,
-                    loc,
+                    loc: tloc,
                 }
             }
             '}' => {
+                let tloc = loc;
                 chars.next();
                 loc.col += 1;
                 Token {
                     kind: TokenKind::RBrace,
-                    loc,
-                }
-            }
-            ',' => {
-                chars.next();
-                loc.col += 1;
-                Token {
-                    kind: TokenKind::Comma,
-                    loc,
+                    loc: tloc,
                 }
             }
             '"' => {
+                let tloc = loc;
                 chars.next();
                 loc.col += 1;
 
@@ -105,10 +99,11 @@ pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
 
                 Token {
                     kind: TokenKind::String(content),
-                    loc,
+                    loc: tloc,
                 }
             }
             _ if c.is_alphanumeric() => {
+                let tloc = loc;
                 let mut content = String::new();
 
                 while let Some(&n) = chars.peek() {
@@ -125,7 +120,6 @@ pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
                     "answer" => TokenKind::Answer,
                     "style" => TokenKind::Style,
                     "title" => TokenKind::Title,
-                    "show" => TokenKind::Show,
                     "has" => TokenKind::Has,
                     "is" => TokenKind::Is,
                     "by" => TokenKind::By,
@@ -159,7 +153,7 @@ pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
                         });
                     }
                 };
-                Token { kind, loc }
+                Token { kind, loc: tloc }
             }
             _ if c == '#' => {
                 while let Some(&n) = chars.peek() {
@@ -186,7 +180,7 @@ pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
                 return Err(Error {
                     loc,
                     file: file.into(),
-                    kind: ErrorKind::UnrecognizedToken,
+                    kind: ErrorKind::UnrecognizedToken(c.into()),
                 });
             }
         });

@@ -4,13 +4,14 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 pub enum ErrorKind {
     InvalidKeyword(String),
     UnterminatedString,
-    UnrecognizedToken,
+    UnrecognizedToken(String),
     UnexpectedToken,
     UnexpectedEnd,
     ExpectedString,
+    MissingBrace,
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Location {
     pub line: usize,
     pub col: usize,
@@ -32,14 +33,15 @@ impl Display for Error {
             self.loc.line,
             self.loc.col,
             match &self.kind {
-                ErrorKind::InvalidKeyword(kw) => format!("encountered invalid keyword {}", kw),
+                ErrorKind::InvalidKeyword(kw) => format!("encountered invalid keyword: {}", kw),
                 ErrorKind::UnterminatedString =>
                     "encountered unterminated string during tokenization".into(),
-                ErrorKind::UnrecognizedToken =>
-                    "encountered unrecognized token during tokenization".into(),
+                ErrorKind::UnrecognizedToken(ch) =>
+                    format!("encountered unrecognized token during tokenization: {}", ch),
                 ErrorKind::UnexpectedToken => "encountered unexpected token during parsing".into(),
                 ErrorKind::UnexpectedEnd =>
                     "encountered unexpected end-of-file during parsing".into(),
+                ErrorKind::MissingBrace => "expected brace during parsing".into(),
                 ErrorKind::ExpectedString => "expected string during parsing".into(),
             }
         )
