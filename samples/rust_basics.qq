@@ -4,33 +4,33 @@ question "Which trait implements developer-facing formatting?" {
 	answer {
 		"Debug",
 	},
-	value 3
+	value 3,
 }
 
 question "Which macro is used for debugging?" {
 	answer {
 		"dbg!",
 	},
-	value 1
+	value 1,
 }
 
 question "How to create a reference?" {
 	answer {
 		"&",
 	},
-	value 5
+	value 5,
 }
 
 question "Should you use unsafe everywhere" {
 	answer {
 		"no",
 	},
-	value 2
+	value 2,
 }
 
 question "Who created Rust?" {
 	answer {
 		"Graydon Hoare",
 	},
-	value 5
+	value 5,
 }
