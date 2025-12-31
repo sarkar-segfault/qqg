@@ -1,36 +1,36 @@
-title "Rust Basic Quiz" by "sarkar-segfault"
+title "rust basics quiz" by "sarkar-segfault"
 
-question "Which trait implements developer-facing formatting?" {
+question "which stream is used for getting user input in rust?" {
 	answer {
-		"Debug",
+		"std::io::stdin",
 	},
 	value 3,
 }
 
-question "Which macro is used for debugging?" {
+question "which macro is used for debugging in rust?" {
 	answer {
 		"dbg!",
 	},
 	value 1,
 }
 
-question "How to create a reference?" {
+question "how do we create a reference to a value in rust?" {
 	answer {
 		"&",
 	},
 	value 5,
 }
 
-question "Should you use unsafe everywhere" {
+question "which blocks let you write unsafe rust code?" {
 	answer {
-		"no",
+		"unsafe",
 	},
 	value 2,
 }
 
-question "Who created Rust?" {
+question "who created rust?" {
 	answer {
-		"Graydon Hoare",
+		"graydon hoare",
 	},
 	value 5,
 }
