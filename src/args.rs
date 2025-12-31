@@ -1,12 +1,6 @@
 use crate::err;
+use std::io::{Write, stdin, stdout};
 use std::process::exit;
-
-#[derive(Default)]
-pub struct Info {
-    pub file: String,
-    pub styles: Vec<String>,
-    pub scripts: Vec<String>,
-}
 
 fn version() {
     println!(
@@ -24,57 +18,36 @@ fn help() {
         env!("CARGO_PKG_AUTHORS"),
         env!("CARGO_PKG_LICENSE")
     );
-    println!("home at {}", env!("CARGO_PKG_HOMEPAGE"));
 
-    println!("usage: qqg [-v|-h|-i <input.qq>|-c <styles.css>|-j <script.js>]");
+    println!("usage: qqg [-v|-h] <input>");
     println!("\t-v: prints the version and exits");
     println!("\t-h: prints this message and exits");
-    println!("\t-i <input.qq>: specify the input quiz file");
-    println!("\t-j <script.js>: specify a script file (web)");
-    println!("\t-c <styles.css>: specify a stylesheet (web)");
+    println!("\t<input>: specify the input quiz file");
 }
 
-pub fn parse() -> Info {
+pub fn parse() -> String {
     let mut args = std::env::args();
-    let mut info = Info::default();
-    let mut index = 1;
+    let mut file = String::new();
     args.next();
 
-    while let Some(arg) = args.next() {
+    for arg in args {
         if arg == "-v" {
             version();
             exit(0);
         } else if arg == "-h" {
             help();
             exit(0);
-        } else if arg == "-i" {
-            if let Some(input) = args.next() {
-                info.file = input;
-            } else {
-                err!("expected input file after -i");
-            }
-        } else if arg == "-c" {
-            if let Some(style) = args.next() {
-                info.styles.push(style);
-            } else {
-                err!("expected stylesheet after -c");
-            }
-        } else if arg == "-j" {
-            if let Some(script) = args.next() {
-                info.scripts.push(script);
-            } else {
-                err!("expected script file after -j");
-            }
         } else {
-            err!("got malformed argument at {}", index);
+            file = arg;
         }
-
-        index += 1;
     }
 
-    if info.file.is_empty() {
-        err!("expected input file to be provided");
+    if file.is_empty() {
+        print!("enter an input quiz file: ");
+        stdout().flush().unwrap_or_else(|e| err!(e));
+        stdin().read_line(&mut file).unwrap_or_else(|e| err!(e));
+        file = file.trim().to_string();
     }
 
-    info
+    file
 }

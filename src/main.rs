@@ -5,7 +5,7 @@ mod token;
 mod utils;
 
 fn main() {
-    let file = &args::parse().file;
+    let file = &args::parse();
     out::console(
         ast::ify(
             &mut token::ize(

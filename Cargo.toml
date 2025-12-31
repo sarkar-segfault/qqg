@@ -1,16 +1,16 @@
 [package]
 name = "quick-quiz-generator"
 edition = "2024"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["sarkar-segfault"]
-description = "generate web and console-based quizzes blazingly fast"
+description = "generate interactive, console-based quizzes blazingly fast"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/sarkar-segfault/qqg"
-homepage = "https://github.com/sarkar-segfault/qqg"
-documentation = "https://github.com/sarkar-segfault/qqg"
+homepage = "https://crates.io/crates/quick-quiz-generator"
+documentation = "https://docs.rs/quick-quiz-generator"
 readme = "README.md"
-keywords = ["cli", "parser", "web", "text", "fun"]
-categories = ["command-line-utilities", "parser-implementations", "text-processing", "web-programming", "games"]
+keywords = ["cli", "parser", "interactive", "text", "fun"]
+categories = ["command-line-utilities", "parser-implementations", "text-processing", "config", "games"]
 default-run = "qqg"
 
 [[bin]]
