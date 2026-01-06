@@ -1,6 +1,6 @@
-use crate::utils::{Error, ErrorKind, Location, Result};
+use crate::utils::*;
 
-#[derive(PartialEq, Debug, Eq, Clone)]
+#[derive(Debug)]
 pub enum TokenKind {
     String(String),
     Number(isize),
@@ -10,193 +10,245 @@ pub enum TokenKind {
 
     Question,
     Answer,
+    Style,
     Value,
     Title,
+    Show,
     By,
+
+    FgBlack,
+    FgRed,
+    FgGreen,
+    FgYellow,
+    FgBlue,
+    FgMagenta,
+    FgCyan,
+    FgWhite,
+
+    FgBrBlack,
+    FgBrRed,
+    FgBrGreen,
+    FgBrYellow,
+    FgBrBlue,
+    FgBrMagenta,
+    FgBrCyan,
+    FgBrWhite,
+
+    BgBlack,
+    BgRed,
+    BgGreen,
+    BgYellow,
+    BgBlue,
+    BgMagenta,
+    BgCyan,
+    BgWhite,
+
+    BgBrBlack,
+    BgBrRed,
+    BgBrGreen,
+    BgBrYellow,
+    BgBrBlue,
+    BgBrMagenta,
+    BgBrCyan,
+    BgBrWhite,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Token {
     pub kind: TokenKind,
-    pub loc: Location,
+    pub begin: Location,
+    pub end: Location,
 }
 
-pub fn ize(input: String, file: &String) -> Result<Vec<Token>> {
-    let mut tokens: Vec<Token> = Vec::new();
-    let mut chars = input.chars().peekable();
-    let mut loc = Location { line: 1, col: 1 };
+pub type TokenStream = std::collections::VecDeque<Token>;
 
-    while let Some(&c) = chars.peek() {
-        tokens.push(match c {
+fn ize_number(
+    loc: &mut Location,
+    buf: &mut String,
+    begin: Location,
+    chars: &mut std::iter::Peekable<std::str::Chars<'_>>,
+    file: &str,
+) -> Token {
+    while let Some(&dig) = chars.peek()
+        && dig.is_numeric()
+    {
+        chars.next();
+        loc.col += 1;
+        buf.push(dig);
+    }
+
+    let out = Token {
+        kind: TokenKind::Number(buf.parse::<isize>().unwrap_or_else(|e| {
+            error(
+                begin,
+                *loc,
+                &format!("failed to parse number: {}", e),
+                file,
+                false,
+            )
+        })),
+        begin,
+        end: *loc,
+    };
+
+    buf.clear();
+    out
+}
+
+pub fn ize(file: &str, text: &str) -> TokenStream {
+    let mut tokens = TokenStream::new();
+    let mut chars = text.chars().peekable();
+    let mut begin: Location;
+    let mut loc = Location::default();
+    let mut buf = String::new();
+
+    while let Some(tok) = chars.next() {
+        begin = loc;
+        tokens.push_back(match tok {
             '{' => {
-                let tloc = loc;
-                chars.next();
                 loc.col += 1;
                 Token {
                     kind: TokenKind::LBrace,
-                    loc: tloc,
+                    begin,
+                    end: begin,
                 }
             }
             '}' => {
-                let tloc = loc;
-                chars.next();
                 loc.col += 1;
                 Token {
                     kind: TokenKind::RBrace,
-                    loc: tloc,
+                    begin,
+                    end: begin,
                 }
             }
             ',' => {
-                let tloc = loc;
-                chars.next();
                 loc.col += 1;
                 Token {
-                    loc: tloc,
                     kind: TokenKind::Comma,
+                    begin,
+                    end: begin,
                 }
             }
             '"' => {
-                let tloc = loc;
-                chars.next();
-                loc.col += 1;
-
                 let mut closed = false;
-                let mut content = String::new();
 
-                while let Some(&n) = chars.peek() {
-                    if n == '"' {
+                for chr in chars.by_ref() {
+                    loc.col += 1;
+                    if chr == '"' {
                         closed = true;
-                        chars.next();
-                        loc.col += 1;
                         break;
-                    } else {
-                        content.push(n);
-                        chars.next();
-                        loc.col += 1;
                     }
+                    buf.push(chr);
                 }
 
                 if !closed {
-                    return Err(Error {
-                        loc,
-                        file: file.into(),
-                        kind: ErrorKind::UnterminatedString,
-                    });
+                    error(begin, loc, "encountered unterminated string", file, false);
                 }
 
-                Token {
-                    kind: TokenKind::String(content),
-                    loc: tloc,
-                }
+                let out = Token {
+                    kind: TokenKind::String(buf.clone()),
+                    begin,
+                    end: loc,
+                };
+
+                buf.clear();
+                out
             }
             '-' => {
-                let tloc = loc;
-                let mut content = String::new();
-                chars.next();
-                loc.col += 1;
-
-                while let Some(&n) = chars.peek() {
-                    if !n.is_numeric() {
-                        break;
-                    }
-                    chars.next();
-                    loc.col += 1;
-                    content.push(n);
-                }
-
-                let number = content.parse::<isize>().map_err(|_| Error {
-                    loc: tloc,
-                    file: file.into(),
-                    kind: ErrorKind::MalformedNumber,
-                })?;
-
-                Token {
-                    kind: TokenKind::Number(-number),
-                    loc: tloc,
-                }
+                buf.push(tok);
+                ize_number(&mut loc, &mut buf, begin, &mut chars, file)
             }
-            _ if c.is_numeric() => {
-                let tloc = loc;
-                let mut content = String::new();
-
-                while let Some(&n) = chars.peek() {
-                    if !n.is_numeric() {
-                        break;
-                    }
-                    chars.next();
-                    loc.col += 1;
-                    content.push(n);
-                }
-
-                let number = content.parse::<isize>().map_err(|_| Error {
-                    loc: tloc,
-                    file: file.into(),
-                    kind: ErrorKind::MalformedNumber,
-                })?;
-                Token {
-                    kind: TokenKind::Number(number),
-                    loc: tloc,
-                }
+            '0'..='9' => {
+                buf.push(tok);
+                ize_number(&mut loc, &mut buf, begin, &mut chars, file)
             }
-            _ if c.is_alphanumeric() => {
-                let tloc = loc;
-                let mut content = String::new();
+            _ if tok.is_alphanumeric() => {
+                buf.push(tok);
 
-                while let Some(&n) = chars.peek() {
-                    if !n.is_alphanumeric() {
-                        break;
-                    }
-                    content.push(n);
-                    chars.next();
+                while let Some(&chr) = chars.peek()
+                    && (chr.is_alphanumeric() || chr == '_')
+                {
                     loc.col += 1;
+                    chars.next();
+                    buf.push(chr);
                 }
 
-                let kind = match content.as_str() {
-                    "question" => TokenKind::Question,
-                    "answer" => TokenKind::Answer,
-                    "value" => TokenKind::Value,
-                    "title" => TokenKind::Title,
-                    "by" => TokenKind::By,
-                    _ => {
-                        return Err(Error {
-                            loc,
-                            file: file.into(),
-                            kind: ErrorKind::InvalidKeyword(content),
-                        });
-                    }
+                let out = Token {
+                    kind: match buf.as_str() {
+                        "question" => TokenKind::Question,
+                        "answer" => TokenKind::Answer,
+                        "style" => TokenKind::Style,
+                        "value" => TokenKind::Value,
+                        "title" => TokenKind::Title,
+                        "show" => TokenKind::Show,
+                        "by" => TokenKind::By,
+
+                        "fg_black" => TokenKind::FgBlack,
+                        "fg_red" => TokenKind::FgRed,
+                        "fg_green" => TokenKind::FgGreen,
+                        "fg_yellow" => TokenKind::FgYellow,
+                        "fg_blue" => TokenKind::FgBlue,
+                        "fg_magenta" => TokenKind::FgMagenta,
+                        "fg_cyan" => TokenKind::FgCyan,
+                        "fg_white" => TokenKind::FgWhite,
+
+                        "fg_br_black" => TokenKind::FgBrBlack,
+                        "fg_br_red" => TokenKind::FgBrRed,
+                        "fg_br_green" => TokenKind::FgBrGreen,
+                        "fg_br_yellow" => TokenKind::FgBrYellow,
+                        "fg_br_blue" => TokenKind::FgBrBlue,
+                        "fg_br_magenta" => TokenKind::FgBrMagenta,
+                        "fg_br_cyan" => TokenKind::FgBrCyan,
+                        "fg_br_white" => TokenKind::FgBrWhite,
+
+                        "bg_black" => TokenKind::BgBlack,
+                        "bg_red" => TokenKind::BgRed,
+                        "bg_green" => TokenKind::BgGreen,
+                        "bg_yellow" => TokenKind::BgYellow,
+                        "bg_blue" => TokenKind::BgBlue,
+                        "bg_magenta" => TokenKind::BgMagenta,
+                        "bg_cyan" => TokenKind::BgCyan,
+                        "bg_white" => TokenKind::BgWhite,
+
+                        "bg_br_black" => TokenKind::BgBrBlack,
+                        "bg_br_red" => TokenKind::BgBrRed,
+                        "bg_br_green" => TokenKind::BgBrGreen,
+                        "bg_br_yellow" => TokenKind::BgBrYellow,
+                        "bg_br_blue" => TokenKind::BgBrBlue,
+                        "bg_br_magenta" => TokenKind::BgBrMagenta,
+                        "bg_br_cyan" => TokenKind::BgBrCyan,
+                        "bg_br_white" => TokenKind::BgBrWhite,
+                        _ => error(begin, loc, "encountered unrecognized keyword", file, false),
+                    },
+                    begin,
+                    end: loc,
                 };
-                Token { kind, loc: tloc }
+
+                buf.clear();
+                out
             }
-            _ if c == '#' => {
-                while let Some(&n) = chars.peek() {
-                    chars.next();
-                    loc.col += 1;
-                    if n == '\n' {
-                        break;
-                    }
-                }
-                continue;
-            }
-            _ if c == '\n' => {
-                chars.next();
+            _ if matches!(tok, '\n' | '\r') => {
                 loc.line += 1;
                 loc.col = 1;
                 continue;
             }
-            _ if c.is_whitespace() => {
-                chars.next();
+            _ if tok.is_whitespace() => {
                 loc.col += 1;
                 continue;
             }
-            _ => {
-                return Err(Error {
-                    loc,
-                    file: file.into(),
-                    kind: ErrorKind::UnrecognizedToken(c.into()),
-                });
+            '#' => {
+                for chr in chars.by_ref() {
+                    if chr == '\n' {
+                        loc.line += 1;
+                        loc.col = 1;
+                        break;
+                    }
+                }
+                continue;
             }
+            _ => error(begin, loc, "encountered unrecognized token", file, false),
         });
     }
 
-    Ok(tokens)
+    tokens
 }

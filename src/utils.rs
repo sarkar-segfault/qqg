@@ -1,74 +1,55 @@
-use std::fmt::{Display, Formatter, Result as FmtResult};
-
-#[derive(Debug)]
-pub enum ErrorKind {
-    InvalidKeyword(String),
-    UnterminatedString,
-    UnrecognizedToken(String),
-    UnexpectedToken,
-    UnexpectedEnd,
-    ExpectedString,
-    MissingBrace,
-    MalformedNumber,
-    ExpectedComma,
+#[macro_export]
+macro_rules! fatal {
+    ($($arg:tt)+) => {{
+        eprintln!($($arg)+);
+        std::process::exit(0);
+    }}
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy)]
 pub struct Location {
     pub line: usize,
     pub col: usize,
 }
 
-#[derive(Debug)]
-pub struct Error {
-    pub loc: Location,
-    pub file: String,
-    pub kind: ErrorKind,
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(
-            f,
-            "[{}:{}:{}] {}",
-            self.file,
-            self.loc.line,
-            self.loc.col,
-            match &self.kind {
-                ErrorKind::InvalidKeyword(kw) => format!("encountered invalid keyword: {}", kw),
-                ErrorKind::UnterminatedString =>
-                    "encountered unterminated string during tokenization".into(),
-                ErrorKind::UnrecognizedToken(ch) =>
-                    format!("encountered unrecognized token during tokenization: {}", ch),
-                ErrorKind::UnexpectedToken => "encountered unexpected token during parsing".into(),
-                ErrorKind::UnexpectedEnd =>
-                    "encountered unexpected end-of-file during parsing".into(),
-                ErrorKind::MissingBrace => "expected brace during parsing".into(),
-                ErrorKind::MalformedNumber =>
-                    "encountered malformed number during toknization".into(),
-                ErrorKind::ExpectedComma => "expected comma during parsing".into(),
-                ErrorKind::ExpectedString => "expected string during parsing".into(),
-            }
-        )
+impl Default for Location {
+    fn default() -> Self {
+        Self { line: 1, col: 1 }
     }
 }
 
-impl std::error::Error for Error {}
+pub fn error(begin: Location, end: Location, msg: &str, file: &str, parse: bool) -> ! {
+    let suffix = if parse { "parsing" } else { "tokenization" };
 
-pub type Result<T> = std::result::Result<T, Error>;
-
-#[macro_export]
-macro_rules! err {
-    ($msg:ident) => {{
-        eprintln!("{}", $msg);
-        std::process::exit(1);
-    }};
-    ($msg:expr) => {{
-        eprintln!($msg);
-        std::process::exit(1)
-    }};
-    ($msg:expr, $idx:ident) => {{
-        eprintln!($msg, $idx);
-        std::process::exit(1)
-    }};
+    if begin.line == end.line {
+        if begin.col == end.col {
+            fatal!(
+                "[{}:{}:{}] {} (during {})",
+                file,
+                begin.line,
+                begin.col,
+                msg,
+                suffix
+            );
+        }
+        fatal!(
+            "[{}:{} {}..{}] {} (during {})",
+            file,
+            begin.line,
+            begin.col,
+            end.col,
+            msg,
+            suffix
+        );
+    }
+    fatal!(
+        "[{} {}:{}..{}:{}] {} (during {})",
+        file,
+        begin.line,
+        begin.col,
+        end.line,
+        end.col,
+        msg,
+        suffix
+    );
 }
