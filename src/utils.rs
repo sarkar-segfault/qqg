@@ -2,7 +2,6 @@ use std::io::IsTerminal;
 
 pub enum Color {
     Yellow,
-    Green,
     Grey,
     Red,
 }
@@ -16,7 +15,6 @@ pub fn color(kind: Color, text: &str) -> String {
         "{}{}\x1b[0m",
         match kind {
             Color::Yellow => "\x1b[33m",
-            Color::Green => "\x1b[32m",
             Color::Grey => "\x1b[90m",
             Color::Red => "\x1b[31m",
         },

@@ -5,41 +5,39 @@ use crate::{
 
 fn help(prog: &str) -> ! {
     println!(
-        "{}, version {}",
-        color(Color::Green, env!("CARGO_PKG_NAME")),
-        color(Color::Green, env!("CARGO_PKG_VERSION"))
-    );
-    println!(
-        "generate {}, console-based quizzes {}",
-        color(Color::Green, "interactive"),
-        color(Color::Green, "blazingly fast")
+        "{}",
+        color(
+            Color::Yellow,
+            &(env!("CARGO_PKG_NAME").to_owned() + " " + env!("CARGO_PKG_VERSION"))
+        ),
     );
     println!(
         "created by {}, licensed under {}",
-        color(Color::Green, env!("CARGO_PKG_AUTHORS")),
-        color(Color::Green, env!("CARGO_PKG_LICENSE"))
+        color(Color::Yellow, env!("CARGO_PKG_AUTHORS")),
+        color(Color::Yellow, env!("CARGO_PKG_LICENSE"))
     );
+    println!(env!("CARGO_PKG_DESCRIPTION"));
 
     let input = color(Color::Grey, "<input.qq>");
 
-    println!("\n{}", color(Color::Green, prog));
+    println!("\n{}", color(Color::Yellow, prog));
     println!(
         "    {}\n\tprints this message and exits",
-        color(Color::Green, "help")
+        color(Color::Yellow, "help")
     );
     println!(
         "    {} {}\n\ttokenizes the provided file",
-        color(Color::Green, "token"),
+        color(Color::Yellow, "token"),
         input
     );
     println!(
         "    {} {}\n\ttokenizes and parses the provided file",
-        color(Color::Green, "parse"),
+        color(Color::Yellow, "parse"),
         input
     );
     println!(
         "    {} {}\n\ttokenizes, parses and starts the provided file",
-        color(Color::Green, "start"),
+        color(Color::Yellow, "start"),
         input
     );
 
