@@ -26,33 +26,6 @@ pub struct Token {
 
 pub type TokenStream = std::collections::VecDeque<Token>;
 
-fn ize_number(
-    loc: &mut Location,
-    buf: &mut String,
-    begin: Location,
-    chars: &mut std::iter::Peekable<std::str::Chars<'_>>,
-    file: &str,
-) -> Token {
-    while let Some(&dig) = chars.peek()
-        && dig.is_numeric()
-    {
-        chars.next();
-        loc.col += 1;
-        buf.push(dig);
-    }
-
-    let out = Token {
-        kind: TokenKind::Number(buf.parse::<isize>().unwrap_or_else(|e| {
-            token_error!(begin, *loc, &format!("failed to parse number: {}", e), file)
-        })),
-        begin,
-        end: *loc,
-    };
-
-    buf.clear();
-    out
-}
-
 pub fn ize(file: &str, text: &str) -> TokenStream {
     let mut tokens = TokenStream::new();
     let mut chars = text.chars().peekable();
@@ -112,16 +85,31 @@ pub fn ize(file: &str, text: &str) -> TokenStream {
                 buf.clear();
                 out
             }
-            '-' => {
+            '-' | '0'..='9' => {
                 buf.push(tok);
-                ize_number(&mut loc, &mut buf, begin, &mut chars, file)
-            }
-            '0'..='9' => {
-                buf.push(tok);
-                ize_number(&mut loc, &mut buf, begin, &mut chars, file)
+                loc.col += 1;
+                while let Some(&dig) = chars.peek()
+                    && dig.is_numeric()
+                {
+                    chars.next();
+                    loc.col += 1;
+                    buf.push(dig);
+                }
+
+                let out = Token {
+                    kind: TokenKind::Number(buf.parse::<isize>().unwrap_or_else(|e| {
+                        token_error!(begin, loc, &format!("failed to parse number: {}", e), file)
+                    })),
+                    begin,
+                    end: loc,
+                };
+
+                buf.clear();
+                out
             }
             _ if tok.is_alphanumeric() => {
                 buf.push(tok);
+                loc.col += 1;
 
                 while let Some(&chr) = chars.peek()
                     && (chr.is_alphanumeric() || chr == '_')

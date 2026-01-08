@@ -2,35 +2,35 @@ title "rust basics quiz" by "sarkar-segfault"
 
 question "which stream is used for getting user input in rust?" {
 	answer {
-		"std::io::stdin",
-	},
-	value 3,
+		"std::io::stdin"
+	}
+	value 3
 }
 
 question "which macro is used for debugging in rust?" {
 	answer {
-		"dbg!",
-	},
-	value 1,
+		"dbg!"
+	}
+	value 1
 }
 
 question "how do we create a reference to a value in rust?" {
 	answer {
-		"&",
-	},
-	value 5,
+		"&"
+	}
+	value 5
 }
 
 question "which blocks let you write unsafe rust code?" {
 	answer {
-		"unsafe",
-	},
-	value 2,
+		"unsafe"
+	}
+	value 2
 }
 
 question "who created rust?" {
 	answer {
-		"graydon hoare",
-	},
-	value 5,
+		"graydon hoare"
+	}
+	value 5
 }

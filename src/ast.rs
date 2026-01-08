@@ -4,12 +4,13 @@ use crate::token::{Token, TokenKind, TokenStream};
 #[derive(Debug, Default)]
 pub struct Answer {
     pub valid: Vec<String>,
-    pub option: bool,
+    pub show: bool,
 }
 
 #[derive(Debug, Default)]
 pub struct Question {
     pub answer: Answer,
+    pub text: String,
     pub value: isize,
 }
 
@@ -60,7 +61,11 @@ fn next_string(tokens: &mut TokenStream, file: &str, last: Token) -> Token {
     match tokens.pop_front() {
         Some(token) => match token.kind {
             TokenKind::String(_) => token,
-            _ => parse_error!(token, "", file),
+            _ => parse_error!(
+                token,
+                "encountered unexpected token; expected [String]",
+                file
+            ),
         },
         None => parse_error!(
             last,
@@ -70,8 +75,127 @@ fn next_string(tokens: &mut TokenStream, file: &str, last: Token) -> Token {
     }
 }
 
+fn next_number(tokens: &mut TokenStream, last: Token, file: &str) -> Token {
+    match tokens.pop_front() {
+        Some(token) => match token.kind {
+            TokenKind::Number(_) => token,
+            _ => parse_error!(
+                token,
+                "encountered unexpected token; expected [Number]",
+                file
+            ),
+        },
+        None => parse_error!(
+            last,
+            "encountered unexpected end of input; expected [Number]",
+            file
+        ),
+    }
+}
+
+fn ify_answer(tokens: &mut TokenStream, last: Token, file: &str) -> (Answer, Token) {
+    let mut stuff = next(tokens, file, last, &[TokenKind::LBrace]);
+    let mut answer = Answer::default();
+
+    while let Some(token) = tokens.pop_front() {
+        match token.kind {
+            TokenKind::RBrace => {
+                stuff = token;
+                break;
+            }
+            TokenKind::Show => {
+                stuff = token;
+                answer.show = !answer.show;
+
+                if let Some(tok) = tokens.front()
+                    && tok.kind == TokenKind::Comma
+                {
+                    stuff = tokens.pop_front().unwrap_or_else(|| unreachable!());
+                }
+            }
+            TokenKind::String(ref s) => {
+                answer.valid.push(s.to_string());
+                stuff = token;
+
+                if let Some(tok) = tokens.front()
+                    && tok.kind == TokenKind::Comma
+                {
+                    stuff = tokens.pop_front().unwrap_or_else(|| unreachable!());
+                }
+            }
+            _ => parse_error!(
+                token,
+                "encountered unexpected item; expected one of [String, Show]",
+                file
+            ),
+        }
+    }
+
+    if stuff.kind != TokenKind::RBrace {
+        parse_error!(stuff, "encountered unterminated [Answer] directive", file);
+    }
+
+    if answer.valid.is_empty() {
+        parse_error!(stuff, "expected [String]s in [Answer] directive", file);
+    }
+
+    if let Some(token) = tokens.front()
+        && token.kind == TokenKind::Comma
+    {
+        tokens.pop_front();
+    }
+
+    (answer, stuff)
+}
+
 fn ify_question(tokens: &mut TokenStream, last: Token, file: &str) -> Question {
-    todo!();
+    let mut stuff = next_string(tokens, file, last);
+    let mut question = Question::default();
+    let mut closed = false;
+
+    if let TokenKind::String(ref s) = stuff.kind {
+        question.text = s.to_string();
+    } else {
+        unreachable!();
+    }
+
+    stuff = next(tokens, file, stuff, &[TokenKind::LBrace]);
+
+    while let Some(token) = tokens.pop_front() {
+        match token.kind {
+            TokenKind::RBrace => {
+                closed = true;
+                break;
+            }
+            TokenKind::Value => {
+                stuff = next_number(tokens, token, file);
+
+                if let TokenKind::Number(ref n) = stuff.kind {
+                    question.value = *n;
+                } else {
+                    unreachable!();
+                }
+
+                if let Some(tok) = tokens.front()
+                    && tok.kind == TokenKind::Comma
+                {
+                    stuff = tokens.pop_front().unwrap_or_else(|| unreachable!());
+                }
+            }
+            TokenKind::Answer => (question.answer, stuff) = ify_answer(tokens, token, file),
+            _ => parse_error!(
+                token,
+                "encountered unexpected directive; expected one of [Answer, Value]",
+                file
+            ),
+        }
+    }
+
+    if !closed {
+        parse_error!(stuff, "encountered unterminated [Question] directive", file);
+    }
+
+    question
 }
 
 fn ify_metaline(tokens: &mut TokenStream, last: Token, file: &str) -> Metaline {
@@ -102,7 +226,7 @@ pub fn ify(tokens: &mut TokenStream, file: &str) -> Quiz {
             TokenKind::Question => quiz.questions.push(ify_question(tokens, token, file)),
             _ => parse_error!(
                 token,
-                "encountered unexpected top-level directive; expected metaline or question",
+                "encountered unexpected top-level directive; expected one of [Title, Question]",
                 file
             ),
         }

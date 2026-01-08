@@ -1,26 +1,26 @@
 title "indian history quiz" by "sarkar-segfault"
 
 question "who was the first prime minister of independent india?" {
-    answer { "jawaharlal nehru", },
-    value 5,
+    answer { "jawaharlal nehru" }
+    value 5
 }
 
 question "in which year did india gain independence from british rule?" {
-    answer { "1947", },
-    value 5,
+    answer { "1947" }
+    value 5
 }
 
 question "which ancient Indian emperor is famous for spreading buddhism?" {
-    answer { "ashoka", },
-    value 5,
+    answer { "ashoka" }
+    value 5
 }
 
 question "the indus valley civilization is mainly located in which modern-day country?" {
-    answer { "pakistan", },
-    value 5,
+    answer { "pakistan" }
+    value 5
 }
 
 question "who led the salt march in 1930 as part of the indian independence movement?" {
-    answer { "gandhiji", },
-    value 5,
+    answer { "gandhiji" }
+    value 5
 }
