@@ -71,15 +71,16 @@ fn next_string(tokens: &mut TokenStream, file: &str, last: Token) -> Token {
 }
 
 fn ify_question(tokens: &mut TokenStream, last: Token, file: &str) -> Question {
-    todo!("implement later");
+    todo!();
 }
 
 fn ify_metaline(tokens: &mut TokenStream, last: Token, file: &str) -> Metaline {
     let title = next_string(tokens, file, last);
     let mut metaline = Metaline::default();
-    match title.kind {
-        TokenKind::String(ref s) => metaline.title = s.to_string(),
-        _ => unreachable!(),
+    if let TokenKind::String(ref s) = title.kind {
+        metaline.title = s.to_string();
+    } else {
+        unreachable!();
     }
 
     let by = next(tokens, file, title, &[TokenKind::By]);

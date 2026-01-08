@@ -16,6 +16,6 @@ fn main() {
             "{:#?}",
             ast::ify(&mut token::ize(&info.file, text), &info.file)
         ),
-        _ => todo!("command is unimplemented"),
+        _ => todo!(),
     }
 }
