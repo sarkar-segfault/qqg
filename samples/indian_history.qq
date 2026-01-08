@@ -10,7 +10,7 @@ question "in which year did india gain independence from british rule?" {
     value 5
 }
 
-question "which ancient Indian emperor is famous for spreading buddhism?" {
+question "which ancient indian emperor is famous for spreading buddhism?" {
     answer { "ashoka" }
     value 5
 }
