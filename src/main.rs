@@ -1,4 +1,5 @@
 mod args;
+mod ast;
 mod token;
 mod utils;
 
@@ -11,6 +12,10 @@ fn main() {
 
     match info.cmd {
         Command::Token => println!("{:#?}", token::ize(&info.file, text)),
-        _ => todo!("implement later"),
+        Command::Parse => println!(
+            "{:#?}",
+            ast::ify(&mut token::ize(&info.file, text), &info.file)
+        ),
+        _ => todo!("command is unimplemented"),
     }
 }

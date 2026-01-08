@@ -1,6 +1,6 @@
 use crate::{token_error, utils::Location};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TokenKind {
     String(String),
     Number(isize),
@@ -17,7 +17,7 @@ pub enum TokenKind {
     By,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Token {
     pub kind: TokenKind,
     pub begin: Location,

@@ -30,7 +30,7 @@ macro_rules! fatal {
     }}
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Location {
     pub line: usize,
     pub col: usize,
@@ -116,7 +116,7 @@ macro_rules! token_error {
 
 #[macro_export]
 macro_rules! parse_error {
-    ($begin:expr, $end:expr, $msg:expr, $file: expr) => {{
-        $crate::utils::error($begin, $end, $msg, $file, true);
+    ($token:expr, $msg:expr, $file: expr) => {{
+        $crate::utils::error($token.begin, $token.end, $msg, $file, true);
     }};
 }
