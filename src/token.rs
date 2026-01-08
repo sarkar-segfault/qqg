@@ -13,7 +13,6 @@ pub enum TokenKind {
     Style,
     Value,
     Title,
-    Show,
     By,
 }
 
@@ -126,7 +125,6 @@ pub fn ize(file: &str, text: &str) -> TokenStream {
                         "style" => TokenKind::Style,
                         "value" => TokenKind::Value,
                         "title" => TokenKind::Title,
-                        "show" => TokenKind::Show,
                         "by" => TokenKind::By,
                         _ => token_error!(begin, loc, "encountered unrecognized keyword", file),
                     },

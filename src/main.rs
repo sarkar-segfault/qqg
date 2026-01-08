@@ -1,5 +1,6 @@
 mod args;
 mod ast;
+mod run;
 mod token;
 mod utils;
 
@@ -16,6 +17,6 @@ fn main() {
             "{:#?}",
             ast::ify(&mut token::ize(&info.file, text), &info.file)
         ),
-        _ => todo!(),
+        _ => run::start(ast::ify(&mut token::ize(&info.file, text), &info.file)),
     }
 }

@@ -2,14 +2,8 @@ use crate::parse_error;
 use crate::token::{Token, TokenKind, TokenStream};
 
 #[derive(Debug, Default)]
-pub struct Answer {
-    pub valid: Vec<String>,
-    pub show: bool,
-}
-
-#[derive(Debug, Default)]
 pub struct Question {
-    pub answer: Answer,
+    pub answer: Vec<String>,
     pub text: String,
     pub value: isize,
 }
@@ -22,8 +16,8 @@ pub struct Metaline {
 
 #[derive(Debug, Default)]
 pub struct Quiz {
-    pub questions: Vec<Question>,
     pub metaline: Metaline,
+    pub questions: Vec<Question>,
 }
 
 fn next(tokens: &mut TokenStream, file: &str, last: Token, want: &[TokenKind]) -> Token {
@@ -93,9 +87,9 @@ fn next_number(tokens: &mut TokenStream, last: Token, file: &str) -> Token {
     }
 }
 
-fn ify_answer(tokens: &mut TokenStream, last: Token, file: &str) -> (Answer, Token) {
+fn ify_answer(tokens: &mut TokenStream, last: Token, file: &str) -> (Vec<String>, Token) {
     let mut stuff = next(tokens, file, last, &[TokenKind::LBrace]);
-    let mut answer = Answer::default();
+    let mut answer = Vec::<String>::new();
 
     while let Some(token) = tokens.pop_front() {
         match token.kind {
@@ -103,18 +97,8 @@ fn ify_answer(tokens: &mut TokenStream, last: Token, file: &str) -> (Answer, Tok
                 stuff = token;
                 break;
             }
-            TokenKind::Show => {
-                stuff = token;
-                answer.show = !answer.show;
-
-                if let Some(tok) = tokens.front()
-                    && tok.kind == TokenKind::Comma
-                {
-                    stuff = tokens.pop_front().unwrap_or_else(|| unreachable!());
-                }
-            }
             TokenKind::String(ref s) => {
-                answer.valid.push(s.to_string());
+                answer.push(s.to_string());
                 stuff = token;
 
                 if let Some(tok) = tokens.front()
@@ -135,7 +119,7 @@ fn ify_answer(tokens: &mut TokenStream, last: Token, file: &str) -> (Answer, Tok
         parse_error!(stuff, "encountered unterminated [Answer] directive", file);
     }
 
-    if answer.valid.is_empty() {
+    if answer.is_empty() {
         parse_error!(stuff, "expected [String]s in [Answer] directive", file);
     }
 
