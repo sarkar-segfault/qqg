@@ -22,7 +22,7 @@ cargo install quick-quiz-generator
 and boom, you can invoke it as `qqg`
 
 # usage
-qqg parses `.qq` files, and runs them as quizzes. to get started, create a file `test.qq` and write:
+qqg parses `.qq` (quick-quiz) files, and runs them as quizzes. to get started, create a file `test.qq` and write:
 ```quick-quiz
 title "quick-quiz-generator" by "sarkar-segfault"
 
