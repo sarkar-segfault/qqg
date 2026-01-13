@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod test;
+
 mod args;
 mod ast;
 mod run;
@@ -5,7 +8,7 @@ mod token;
 mod utils;
 
 fn main() {
-    let info = args::parse();
+    let info = args::parse(std::env::args());
     let text = &std::fs::read_to_string(&info.file)
         .unwrap_or_else(|e| fatal!("failed to open file: {}", e));
 

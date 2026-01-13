@@ -10,7 +10,6 @@ pub enum TokenKind {
 
     Question,
     Answer,
-    Style,
     Value,
     Title,
     By,
@@ -122,7 +121,6 @@ pub fn ize(file: &str, text: &str) -> TokenStream {
                     kind: match buf.as_str() {
                         "question" => TokenKind::Question,
                         "answer" => TokenKind::Answer,
-                        "style" => TokenKind::Style,
                         "value" => TokenKind::Value,
                         "title" => TokenKind::Title,
                         "by" => TokenKind::By,

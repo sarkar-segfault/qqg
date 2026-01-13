@@ -44,18 +44,20 @@ fn help(prog: &str) -> ! {
     std::process::exit(0);
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum Command {
     Parse,
     Token,
     Start,
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct Info {
     pub cmd: Command,
     pub file: String,
 }
 
-fn get_filename(args: &mut std::env::Args) -> String {
+fn get_filename(args: &mut impl Iterator<Item = String>) -> String {
     if let Some(file) = args.next() {
         file
     } else {
@@ -63,8 +65,7 @@ fn get_filename(args: &mut std::env::Args) -> String {
     }
 }
 
-pub fn parse() -> Info {
-    let mut args = std::env::args();
+pub fn parse(mut args: impl Iterator<Item = String>) -> Info {
     let prog = args
         .next()
         .unwrap_or_else(|| fatal!("{}", color(Color::Red, "expected program name")));

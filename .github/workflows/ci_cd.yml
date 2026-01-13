@@ -1,0 +1,65 @@
+name: rust ci + cd
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ci_cd:
+    name: formats, clippies, builds, tests, releases and publishes the project
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+    - name: checkout code
+      uses: actions/checkout@v3
+
+    - name: set up rust
+      uses: actions/setup-rust@v1
+      with:
+        rust-version: stable
+
+    - name: format
+      run: cargo fmt --verbose
+
+    - name: clippy
+      run: cargo clippy --verbose -D warnings
+
+    - name: build
+      run: cargo build --verbose --release
+
+    - name: test
+      run: cargo test --verbose --release
+
+    - name: create artifacts
+      shell: pwsh
+      run: ./.github/scripts/create_artifacts.ps1
+
+    - name: check version
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      id: version
+      shell: pwsh
+      run: |
+        $version = . ./.github/scripts/check_version.ps1
+        if ($version) {
+          Out-File -FilePath $env:GITHUB_OUTPUT -Append -InputObject "version=$version"
+        }
+
+    - name: release binaries
+      if: steps.version.outputs.version != ''
+      uses: softprops/action-gh-release@v1
+      with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: release ${{ steps.version.outputs.version }}
+          files: dist/**/*
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: publish crate
+      if: steps.version.outputs.version != ''
+      run: cargo publish --token ${{ secrets.CARGO_TOKEN }}

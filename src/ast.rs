@@ -1,20 +1,20 @@
 use crate::parse_error;
 use crate::token::{Token, TokenKind, TokenStream};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct Question {
     pub answer: Vec<String>,
     pub text: String,
     pub value: isize,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct Metaline {
     pub title: String,
     pub by: String,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct Quiz {
     pub metaline: Metaline,
     pub questions: Vec<Question>,

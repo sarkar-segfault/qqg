@@ -1,7 +1,7 @@
 [package]
 name = "quick-quiz-generator"
 edition = "2024"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["sarkar-segfault"]
 description = "generate interactive quizzes blazingly fast, right in your terminal"
 license = "GPL-3.0-or-later"
