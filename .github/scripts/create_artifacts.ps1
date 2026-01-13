@@ -1,15 +1,19 @@
-if (-Not (Test-Path dist)) { New-Item -ItemType Directory dist }
+$ErrorActionPreference = "Stop"
+if (-not (Test-Path dist)) { New-Item -ItemType Directory dist }
+
+$arch = switch ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture) {
+    'X64' { "amd64" }
+    'Arm64' { "arm64" }
+    default { "unknown" }
+}
+$os = "unknown"
 
 if ($IsWindows) {
-    $today = Get-Date
-    $name = "windows"
-    if ($today.Month -eq 4 -and $today.Day -eq 1) {
-        $name = "microslop"
-    }
-    
-    Copy-Item "target/release/qqg.exe" "dist/qqg-$name.exe"
+    $os = "windows.exe"
 } elseif ($IsMacOS) {
-    Copy-Item "target/release/qqg" "dist/qqg-macos"
-} else {
-    Copy-Item "target/release/qqg" "dist/qqg-linux"
+    $os = "apple"
+} elseif ($IsLinux) {
+    $os = "linux"
 }
+
+Copy-Item "target/release/qqg-$arch-$os" "dist/qqg-$arch-$os"
