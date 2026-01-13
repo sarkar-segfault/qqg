@@ -1,5 +1,8 @@
 name: rust ci + cd
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [main]
