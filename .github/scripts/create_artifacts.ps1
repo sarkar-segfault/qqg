@@ -18,4 +18,4 @@ if ($IsWindows) {
     $os = "linux"
 }
 
-Copy-Item "target/release/qqg-$ext" "dist/qqg-$arch-$os$ext"
+Copy-Item "target/release/qqg$ext" "dist/qqg-$arch-$os$ext"
