@@ -19,7 +19,13 @@ using cargo, you can run:
 ```bash
 cargo install quick-quiz-generator
 ```
-and boom, you can invoke it as `qqg`
+you can also see our [github releases](https://github.com/sarkar-segfault/qqg/releases) for your platform. since 1.1.0, the following binaries are released:
+- amd64-windows
+- arm64-windows
+- amd64-linux
+- arm64-linux
+- amd64-apple
+- arm64-apple
 
 # usage
 qqg parses `.qq` (quick-quiz) files, and runs them as quizzes. to get started, create a file `test.qq` and write:

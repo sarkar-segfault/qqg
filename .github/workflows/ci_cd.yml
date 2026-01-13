@@ -11,8 +11,34 @@ on:
   workflow_dispatch:
 
 jobs:
-  ci_cd:
-    name: formats, clippies, builds, tests, releases and publishes the project
+  format_clippy:
+    name: format and clippy the project
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout the code
+        uses: actions/checkout@v3
+      - run: rustup update stable
+      - run: cargo fmt --verbose
+      - run: cargo clippy --verbose -- -D warnings
+
+  check_version:
+    name: check the local and remote version from crates.io
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      
+    steps:
+      - name: checkout the code
+        uses: actions/checkout@v3
+
+      - name: check the version
+        id: version
+        shell: pwsh
+        run: ./.github/scripts/check_version.ps1
+  
+  build_test_release:
+    name: build, test and release the project
+    needs: check_version
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -25,45 +51,49 @@ jobs:
           - macos-15-intel
 
     steps:
-    - name: checkout code
-      uses: actions/checkout@v3
+      - name: checkout the code
+        uses: actions/checkout@v3
 
-    - name: update rust toolchain
-      run: rustup update stable
-        
-    - name: format
-      run: cargo fmt --verbose
+      - name: update the rust toolchain
+        run: rustup update stable
 
-    - name: clippy
-      run: cargo clippy --verbose -- -D warnings
+      - name: build with verbosity and release mode via cargo
+        run: cargo build --verbose --release
 
-    - name: build
-      run: cargo build --verbose --release
+      - name: test with verbosity and release mode via cargo
+        run: cargo test --verbose --release
 
-    - name: test
-      run: cargo test --verbose --release
+      - name: create the build artifact in dists/
+        shell: pwsh
+        run: ./.github/scripts/create_artifacts.ps1
 
-    - name: create artifacts
-      shell: pwsh
-      run: ./.github/scripts/create_artifacts.ps1
-
-    - name: check version
-      id: version
-      shell: pwsh
-      run: ./.github/scripts/check_version.ps1
-
-    - name: release binary
-      if: steps.version.outputs.version != ''
-      uses: softprops/action-gh-release@v1
-      with:
-          tag_name: ${{ steps.version.outputs.version }}
-          name: release ${{ steps.version.outputs.version }}
+      - name: add the built binary to the github releases
+        if: needs.check_version.outputs.version != ''
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.check_version.outputs.version }}
+          name: release ${{ needs.check_version.outputs.version }}
           files: dist/*
-      env:
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: publish crate
-      if: ${{ matrix.os == 'ubuntu-24.04' &&  steps.version.outputs.version != '' }}
-      run: cargo publish
-      env:
-        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_TOKEN }}
+  release_publish:
+    name: release the project on github releases and publish the project to crates.io
+    needs: check_version
+    runs-on: ubuntu-24.04
+    steps:
+      - name: release to github releases
+        if: needs.check_version.outputs.version != ''
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.check_version.outputs.version }}
+          name: release ${{ needs.check_version.outputs.version }}
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: publish to crates.io
+        if: needs.check_version.outputs.version != ''
+        run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_TOKEN }}
