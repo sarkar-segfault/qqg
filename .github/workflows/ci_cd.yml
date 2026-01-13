@@ -26,7 +26,7 @@ jobs:
       run: cargo fmt --verbose
 
     - name: clippy
-      run: cargo clippy --verbose -D warnings
+      run: cargo clippy --verbose -- -D warnings
 
     - name: build
       run: cargo build --verbose --release
