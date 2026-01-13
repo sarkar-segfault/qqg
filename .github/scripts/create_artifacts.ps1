@@ -7,13 +7,15 @@ $arch = switch ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitect
     default { "unknown" }
 }
 $os = "unknown"
+$ext = ""
 
 if ($IsWindows) {
-    $os = "windows.exe"
+    $ext = ".exe"
+    $os = "windows"
 } elseif ($IsMacOS) {
     $os = "apple"
 } elseif ($IsLinux) {
     $os = "linux"
 }
 
-Copy-Item "target/release/qqg-$arch-$os" "dist/qqg-$arch-$os"
+Copy-Item "target/release/qqg-$ext" "dist/qqg-$arch-$os$ext"
