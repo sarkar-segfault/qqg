@@ -87,6 +87,8 @@ jobs:
         with:
           path: dist/
           merge-multiple: true
+
+      - name: create artifacts
         shell: pwsh
         run: ./.github/scripts/create_artifacts.ps1
       
