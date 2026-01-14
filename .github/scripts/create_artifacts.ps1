@@ -1,21 +1,8 @@
 $ErrorActionPreference = "Stop"
-if (-not (Test-Path dist)) { New-Item -ItemType Directory dist }
 
-$arch = switch ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture) {
-    'X64' { "amd64" }
-    'Arm64' { "arm64" }
-    default { "unknown" }
-}
-$os = "unknown"
-$ext = ""
-
-if ($IsWindows) {
-    $ext = ".exe"
-    $os = "windows"
-} elseif ($IsMacOS) {
-    $os = "apple"
-} elseif ($IsLinux) {
-    $os = "linux"
-}
-
-Copy-Item "target/release/qqg$ext" "dist/qqg-$arch-$os$ext"
+Copy-Item "dist/windows-2025.exe" "dist/qqg-amd64-windows.exe"
+Copy-Item "dist/windows-11-arm.exe" "dist/qqg-arm64-windows.exe"
+Copy-Item "dist/ubuntu-24.04" "dist/qqg-amd64-linux"
+Copy-Item "dist/ubuntu-24.04-arm" "dist/qqg-arm64-linux"
+Copy-Item "dist/macos-15" "dist/qqg-arm64-apple"
+Copy-Item "dist/macos-15-intel" "dist/qqg-amd64-apple"
