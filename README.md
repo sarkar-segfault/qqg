@@ -20,12 +20,12 @@ using cargo, you can run:
 cargo install quick-quiz-generator
 ```
 you can also see our [github releases](https://github.com/sarkar-segfault/qqg/releases) for your platform. since 2.0.0, the following binaries are released:
-- x86_64-windows
-- aarch64-windows
-- x86_64-linux
-- aarch64-linux
-- x86_64-apple
-- aarch64-apple
+- windows-2025
+- windows-11-arm
+- ubuntu-24.04
+- ubuntu-24.04-arm
+- macos-15
+- macos-15-intel
 
 # usage
 qqg parses `.qq` (quick-quiz) files, and runs them as quizzes. to get started, create a file `test.qq` and write:

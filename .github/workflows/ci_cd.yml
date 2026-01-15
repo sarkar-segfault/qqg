@@ -96,13 +96,7 @@ jobs:
         with:
           path: dist/
           merge-multiple: true
-
-      - name: create artifacts
-        if: needs.check_version.outputs.version != ''
-        shell: pwsh
-        working-directory: ${{ github.workspace }}
-        run: pwsh -File ./.github/scripts/create_artifacts.ps1
-      
+   
       - name: release to github releases
         if: needs.check_version.outputs.version != ''
         uses: softprops/action-gh-release@v1
