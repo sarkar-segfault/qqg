@@ -1,4 +1,4 @@
-title "rust basics quiz" by "sarkar-segfault"
+title "rust basics quiz" by "sarkar-segfault" pass 10
 
 question "which stream is used for getting user input in rust?" {
 	answer {

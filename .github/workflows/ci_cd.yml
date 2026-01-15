@@ -28,6 +28,8 @@ jobs:
         run: cargo clippy --verbose -- -D warnings
 
   check_version:
+    needs:
+      format_clippy
     name: check the local and remote version from crates.io
     runs-on: ubuntu-24.04
     outputs:
@@ -44,7 +46,9 @@ jobs:
   
   build_test_upload:
     name: build and test the project, uploading the artifacts
-    needs: check_version
+    needs:
+      - format_clippy
+      - check_version
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -80,7 +84,10 @@ jobs:
 
   release_publish:
     name: release the project on github releases and publish the project to crates.io
-    needs: check_version
+    needs:
+      - check_version
+      - format_clippy
+      - build_test_upload
     runs-on: ubuntu-24.04
     steps:
       - name: download artifacts

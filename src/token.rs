@@ -12,6 +12,7 @@ pub enum TokenKind {
     Answer,
     Value,
     Title,
+    Pass,
     By,
 }
 
@@ -39,7 +40,7 @@ pub fn ize(file: &str, text: &str) -> TokenStream {
                 Token {
                     kind: TokenKind::LBrace,
                     begin,
-                    end: begin,
+                    end: loc,
                 }
             }
             '}' => {
@@ -47,7 +48,7 @@ pub fn ize(file: &str, text: &str) -> TokenStream {
                 Token {
                     kind: TokenKind::RBrace,
                     begin,
-                    end: begin,
+                    end: loc,
                 }
             }
             ',' => {
@@ -55,7 +56,7 @@ pub fn ize(file: &str, text: &str) -> TokenStream {
                 Token {
                     kind: TokenKind::Comma,
                     begin,
-                    end: begin,
+                    end: loc,
                 }
             }
             '"' => {
@@ -71,7 +72,12 @@ pub fn ize(file: &str, text: &str) -> TokenStream {
                 }
 
                 if !closed {
-                    token_error!(begin, loc, "encountered unterminated string", file);
+                    token_error!(
+                        begin,
+                        loc,
+                        &format!("encountered unterminated string: \"{}\n", buf),
+                        file
+                    );
                 }
 
                 let out = Token {
@@ -96,7 +102,12 @@ pub fn ize(file: &str, text: &str) -> TokenStream {
 
                 let out = Token {
                     kind: TokenKind::Number(buf.parse::<isize>().unwrap_or_else(|e| {
-                        token_error!(begin, loc, &format!("failed to parse number: {}", e), file)
+                        token_error!(
+                            begin,
+                            loc,
+                            &format!("failed to parse number {}: {}", buf, e),
+                            file
+                        )
                     })),
                     begin,
                     end: loc,
@@ -110,7 +121,7 @@ pub fn ize(file: &str, text: &str) -> TokenStream {
                 loc.col += 1;
 
                 while let Some(&chr) = chars.peek()
-                    && (chr.is_alphanumeric() || chr == '_')
+                    && (chr.is_alphanumeric())
                 {
                     loc.col += 1;
                     chars.next();
@@ -123,8 +134,14 @@ pub fn ize(file: &str, text: &str) -> TokenStream {
                         "answer" => TokenKind::Answer,
                         "value" => TokenKind::Value,
                         "title" => TokenKind::Title,
+                        "pass" => TokenKind::Pass,
                         "by" => TokenKind::By,
-                        _ => token_error!(begin, loc, "encountered unrecognized keyword", file),
+                        _ => token_error!(
+                            begin,
+                            loc,
+                            &format!("encountered unrecognized keyword: {}", buf),
+                            file
+                        ),
                     },
                     begin,
                     end: loc,
@@ -152,7 +169,12 @@ pub fn ize(file: &str, text: &str) -> TokenStream {
                 }
                 continue;
             }
-            _ => token_error!(begin, loc, "encountered unrecognized token", file),
+            _ => token_error!(
+                begin,
+                loc,
+                &format!("encountered unrecognized token: {}", tok),
+                file
+            ),
         });
     }
 

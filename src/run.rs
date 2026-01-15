@@ -51,11 +51,25 @@ pub fn start(quiz: Quiz) {
         }
     }
 
+    let pass = score >= quiz.metaline.pass;
+
+    println!(
+        "{} {} {} {}",
+        color(Color::Yellow, "you scored"),
+        color(
+            if pass { Color::Green } else { Color::Red },
+            &score.to_string()
+        ),
+        color(Color::Yellow, "out of"),
+        color(Color::SuperCyan, &total.to_string())
+    );
+
     println!(
         "{}",
-        color(
-            Color::Yellow,
-            &format!("you scored {} out of {}", score, total)
-        )
+        if pass {
+            color(Color::Green, "you passed!")
+        } else {
+            color(Color::Red, "you failed!")
+        }
     );
 }

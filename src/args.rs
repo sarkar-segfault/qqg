@@ -59,6 +59,13 @@ pub struct Info {
 
 fn get_filename(args: &mut impl Iterator<Item = String>) -> String {
     if let Some(file) = args.next() {
+        if args.next().is_some() {
+            fatal!(
+                "{}",
+                color(Color::Red, "encountered too many inputs; expected one")
+            );
+        }
+
         file
     } else {
         fatal!("{}", color(Color::Red, "expected input file"));

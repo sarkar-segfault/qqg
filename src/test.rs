@@ -80,7 +80,7 @@ fn parse_ify() {
         ast::ify(
             &mut ize(
                 "test.qq",
-                r#"title "test quiz" by "sarkar-segfault"
+                r#"title "test quiz" by "sarkar-segfault" pass 3
 
                 question "does life have any meaning?" {{
 	                answer {{
@@ -100,7 +100,8 @@ fn parse_ify() {
             }],
             metaline: ast::Metaline {
                 title: "test quiz".to_string(),
-                by: "sarkar-segfault".to_string()
+                by: "sarkar-segfault".to_string(),
+                pass: 3
             }
         }
     );

@@ -1,8 +1,8 @@
 # quick-quiz-generator
 qqg is a rust program designed to let you create interactive quizzes blazingly fast, right in the terminal.
 
-## version 1.0.0
-qqg version 1.0.0 is the second breaking release and rewrite of qqg, after 0.1.0, filled with new features and code improvements.
+## version 2.0.0
+qqg version 2.0.0 is the third breaking release of qqg, after 1.0.0, filled with new features and code improvements.
 
 # features
 - simple and portable text format for structured quizzes
@@ -19,18 +19,18 @@ using cargo, you can run:
 ```bash
 cargo install quick-quiz-generator
 ```
-you can also see our [github releases](https://github.com/sarkar-segfault/qqg/releases) for your platform. since 1.1.0, the following binaries are released:
-- amd64-windows
-- arm64-windows
-- amd64-linux
-- arm64-linux
-- amd64-apple
-- arm64-apple
+you can also see our [github releases](https://github.com/sarkar-segfault/qqg/releases) for your platform. since 2.0.0, the following binaries are released:
+- x86_64-windows
+- aarch64-windows
+- x86_64-linux
+- aarch64-linux
+- x86_64-apple
+- aarch64-apple
 
 # usage
 qqg parses `.qq` (quick-quiz) files, and runs them as quizzes. to get started, create a file `test.qq` and write:
 ```quick-quiz
-title "quick-quiz-generator" by "sarkar-segfault"
+title "quick-quiz-generator" by "sarkar-segfault" pass 1
 
 question "what is 1 + 1?" {
 	answer {
@@ -58,6 +58,7 @@ qqg has 4 main subcommands:
 | `token <input.qq>` | tokenizes the file and prints its token list |
 | `parse <input.qq>` | tokenizes and parses the file and prints the syntax tree |
 | `start <input.qq>` | tokenizes, parses and runs the file as an interactive quiz |
+
 most of the time, you'll only use `help` and `start`; the others are mostly for testing.
 
 # contribution

@@ -12,6 +12,7 @@ pub struct Question {
 pub struct Metaline {
     pub title: String,
     pub by: String,
+    pub pass: isize,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -20,18 +21,17 @@ pub struct Quiz {
     pub questions: Vec<Question>,
 }
 
-fn next(tokens: &mut TokenStream, file: &str, last: Token, want: &[TokenKind]) -> Token {
+fn next(tokens: &mut TokenStream, file: &str, last: Token, want: TokenKind) -> Token {
     match tokens.pop_front() {
         Some(token) => {
-            if want.contains(&token.kind) {
+            if want == token.kind {
                 token
             } else {
                 parse_error!(
                     token,
                     &format!(
-                        "encountered unexpected token; expected {}{:?}",
-                        if want.len() == 1 { "" } else { "one of " },
-                        want
+                        "encountered unexpected {:?}; expected {:?}",
+                        token.kind, want
                     ),
                     file
                 )
@@ -40,11 +40,7 @@ fn next(tokens: &mut TokenStream, file: &str, last: Token, want: &[TokenKind]) -
         None => {
             parse_error!(
                 last,
-                &format!(
-                    "encountered unexpected end of input; expected {}{:?}",
-                    if want.len() == 1 { "" } else { "one of " },
-                    want
-                ),
+                &format!("encountered unexpected end of input; expected {:?}", want),
                 file
             );
         }
@@ -57,13 +53,13 @@ fn next_string(tokens: &mut TokenStream, file: &str, last: Token) -> Token {
             TokenKind::String(_) => token,
             _ => parse_error!(
                 token,
-                "encountered unexpected token; expected [String]",
+                &format!("encountered unexpected {:?}; expected String", token.kind),
                 file
             ),
         },
         None => parse_error!(
             last,
-            "encountered unexpected end of input; expected [String]",
+            "encountered unexpected end of input; expected String",
             file
         ),
     }
@@ -75,20 +71,20 @@ fn next_number(tokens: &mut TokenStream, last: Token, file: &str) -> Token {
             TokenKind::Number(_) => token,
             _ => parse_error!(
                 token,
-                "encountered unexpected token; expected [Number]",
+                &format!("encountered unexpected {:?}; expected Number", token.kind),
                 file
             ),
         },
         None => parse_error!(
             last,
-            "encountered unexpected end of input; expected [Number]",
+            "encountered unexpected end of input; expected Number",
             file
         ),
     }
 }
 
 fn ify_answer(tokens: &mut TokenStream, last: Token, file: &str) -> (Vec<String>, Token) {
-    let mut stuff = next(tokens, file, last, &[TokenKind::LBrace]);
+    let mut stuff = next(tokens, file, last, TokenKind::LBrace);
     let mut answer = Vec::<String>::new();
 
     while let Some(token) = tokens.pop_front() {
@@ -109,18 +105,21 @@ fn ify_answer(tokens: &mut TokenStream, last: Token, file: &str) -> (Vec<String>
             }
             _ => parse_error!(
                 token,
-                "encountered unexpected item; expected one of [String, Show]",
+                &format!(
+                    "encountered unexpected {:?}; expected Show or String",
+                    token.kind
+                ),
                 file
             ),
         }
     }
 
     if stuff.kind != TokenKind::RBrace {
-        parse_error!(stuff, "encountered unterminated [Answer] directive", file);
+        parse_error!(stuff, "encountered unterminated Answer directive", file);
     }
 
     if answer.is_empty() {
-        parse_error!(stuff, "expected [String]s in [Answer] directive", file);
+        parse_error!(stuff, "expected String in Answer directive", file);
     }
 
     if let Some(token) = tokens.front()
@@ -143,7 +142,7 @@ fn ify_question(tokens: &mut TokenStream, last: Token, file: &str) -> Question {
         unreachable!();
     }
 
-    stuff = next(tokens, file, stuff, &[TokenKind::LBrace]);
+    stuff = next(tokens, file, stuff, TokenKind::LBrace);
 
     while let Some(token) = tokens.pop_front() {
         match token.kind {
@@ -169,14 +168,17 @@ fn ify_question(tokens: &mut TokenStream, last: Token, file: &str) -> Question {
             TokenKind::Answer => (question.answer, stuff) = ify_answer(tokens, token, file),
             _ => parse_error!(
                 token,
-                "encountered unexpected directive; expected one of [Answer, Value]",
+                &format!(
+                    "encountered unexpected {:?}; expected Answer or Value",
+                    token.kind
+                ),
                 file
             ),
         }
     }
 
     if !closed {
-        parse_error!(stuff, "encountered unterminated [Question] directive", file);
+        parse_error!(stuff, "encountered unterminated Question directive", file);
     }
 
     question
@@ -191,10 +193,17 @@ fn ify_metaline(tokens: &mut TokenStream, last: Token, file: &str) -> Metaline {
         unreachable!();
     }
 
-    let by = next(tokens, file, title, &[TokenKind::By]);
+    let by = next(tokens, file, title, TokenKind::By);
     let bystr = next_string(tokens, file, by);
     match bystr.kind {
-        TokenKind::String(s) => metaline.by = s,
+        TokenKind::String(ref s) => metaline.by = s.to_string(),
+        _ => unreachable!(),
+    }
+
+    let pass = next(tokens, file, bystr, TokenKind::Pass);
+    let passnum = next_number(tokens, pass, file);
+    match passnum.kind {
+        TokenKind::Number(n) => metaline.pass = n,
         _ => unreachable!(),
     }
 
@@ -210,7 +219,10 @@ pub fn ify(tokens: &mut TokenStream, file: &str) -> Quiz {
             TokenKind::Question => quiz.questions.push(ify_question(tokens, token, file)),
             _ => parse_error!(
                 token,
-                "encountered unexpected top-level directive; expected one of [Title, Question]",
+                &format!(
+                    "encountered unexpected top-level directive {:?}; expected Title or Question",
+                    token.kind
+                ),
                 file
             ),
         }
