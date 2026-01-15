@@ -100,6 +100,7 @@ jobs:
       - name: create artifacts
         if: needs.check_version.outputs.version != ''
         shell: pwsh
+        working-directory: ${{ github.workspace }}
         run: ./.github/scripts/create_artifacts.ps1
       
       - name: release to github releases
