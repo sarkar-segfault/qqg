@@ -88,14 +88,23 @@ jobs:
       - check_version
       - format_clippy
       - build_test_upload
+      
     runs-on: ubuntu-24.04
     steps:
+      - name: checkout the code
+        uses: actions/checkout@v4
+      
       - name: download artifacts
         if: needs.check_version.outputs.version != ''
         uses: actions/download-artifact@v4
         with:
           path: dist/
           merge-multiple: true
+
+      - name: rename artifacts
+        if: needs.check_version.outputs.version != ''
+        shell: pwsh
+        run: ./.github/scripts/rename_artifacts.ps1
    
       - name: release to github releases
         if: needs.check_version.outputs.version != ''
