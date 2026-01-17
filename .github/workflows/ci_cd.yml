@@ -99,7 +99,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: dist/
-          merge-multiple: true
 
       - name: rename artifacts
         if: needs.check_version.outputs.version != ''
