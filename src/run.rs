@@ -4,10 +4,12 @@ use std::io::{Write, stdin, stdout};
 
 pub fn start(quiz: Quiz) {
     println!(
-        "{}\n{} {}\n",
+        "{}\n{} {}\n{} {}\n",
         color(Color::Yellow, &quiz.metaline.title),
         color(Color::Grey, "by"),
-        color(Color::Yellow, &quiz.metaline.by)
+        color(Color::Yellow, &quiz.metaline.by),
+        color(Color::Grey, "passing marks"),
+        color(Color::Yellow, &quiz.metaline.pass.to_string())
     );
 
     let mut total = 0;
@@ -20,7 +22,7 @@ pub fn start(quiz: Quiz) {
             color(Color::SuperCyan, &question.text),
             color(Color::Grey, &format!("[{}]", question.value))
         );
-        print!("{}", color(Color::SuperCyan, "└─"));
+        print!("{} ", color(Color::SuperCyan, "└─"));
         stdout().flush().unwrap_or_else(|e| {
             fatal!(
                 "{}",
@@ -38,14 +40,22 @@ pub fn start(quiz: Quiz) {
         answer = answer.trim().to_string();
 
         if question.answer.contains(&answer) {
-            println!("{}\n", color(Color::Green, "you answered correctly!"));
+            println!("{}\n", color(Color::Green, "correct answer!"));
             score += question.value;
         } else {
             println!(
-                "{}\n",
+                "{} \n",
                 color(
                     Color::Red,
-                    &format!("you answered wrong\n└─{:?}", question.answer)
+                    &format!(
+                        "wrong answer!\n└─ expected {}",
+                        question
+                            .answer
+                            .iter()
+                            .map(|s| format!("\"{}\"", s))
+                            .collect::<Vec<_>>()
+                            .join(" or ")
+                    )
                 )
             );
         }
