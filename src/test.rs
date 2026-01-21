@@ -1,4 +1,5 @@
 use crate::{args, ast, token::*, utils};
+use std::io::IsTerminal;
 use utils::Location;
 
 #[test]
