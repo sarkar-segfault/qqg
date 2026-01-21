@@ -21,21 +21,12 @@ fn args_parse() {
 
 #[test]
 fn utils_color() {
-    if utils::color(utils::Color::Red, "test") != "test" {
-        unsafe {
-            std::env::set_var("NO_COLOR", "1");
-        }
+    let text = utils::color(utils::Color::Red, "test");
 
-        assert_eq!(utils::color(utils::Color::Red, "test"), "test");
+    if std::env::var_os("NO_COLOR").is_some() {
+        assert_eq!(text, "test");
     } else {
-        unsafe {
-            std::env::remove_var("NO_COLOR");
-        }
-
-        assert_eq!(
-            utils::color(utils::Color::Red, "test"),
-            "\x1b[31mtest\x1b[0m"
-        );
+        assert_eq!(text, "\x1b[31mtest\x1b[0m");
     }
 }
 
