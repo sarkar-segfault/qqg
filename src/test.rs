@@ -23,7 +23,7 @@ fn args_parse() {
 fn utils_color() {
     let text = utils::color(utils::Color::Red, "test");
 
-    if std::env::var_os("NO_COLOR").is_some() {
+    if !std::io::stdout().is_terminal() || std::env::var_os("NO_COLOR").is_some() {
         assert_eq!(text, "test");
     } else {
         assert_eq!(text, "\x1b[31mtest\x1b[0m");
