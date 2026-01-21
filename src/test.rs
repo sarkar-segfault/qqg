@@ -1,4 +1,5 @@
 use crate::{args, ast, token::*, utils};
+use utils::Location;
 
 #[test]
 fn args_parse() {
@@ -38,64 +39,94 @@ fn utils_color() {
     }
 }
 
-fn mkloc(line: usize, col: usize) -> utils::Location {
-    utils::Location { line, col }
-}
-
-fn mktok(kind: TokenKind, begin: utils::Location, end: utils::Location) -> Token {
-    Token { kind, begin, end }
-}
-
 #[test]
 fn token_ize() {
     assert_eq!(
         ize(
             "test.qq",
-            "\"test\" 10 {{ , }} question answer value title by"
+            "\"test\" 10 { , }\nquestion answer value title pass by"
         ),
         TokenStream::from([
-            mktok(
-                TokenKind::String("test".to_string()),
-                mkloc(1, 1),
-                mkloc(1, 6)
-            ),
-            mktok(TokenKind::Number(10), mkloc(1, 7), mkloc(1, 9)),
-            mktok(TokenKind::LBrace, mkloc(1, 10), mkloc(1, 10)),
-            mktok(TokenKind::LBrace, mkloc(1, 11), mkloc(1, 11)),
-            mktok(TokenKind::Comma, mkloc(1, 13), mkloc(1, 13)),
-            mktok(TokenKind::RBrace, mkloc(1, 15), mkloc(1, 15)),
-            mktok(TokenKind::RBrace, mkloc(1, 16), mkloc(1, 16)),
-            mktok(TokenKind::Question, mkloc(1, 18), mkloc(1, 26)),
-            mktok(TokenKind::Answer, mkloc(1, 27), mkloc(1, 33)),
-            mktok(TokenKind::Value, mkloc(1, 34), mkloc(1, 39)),
-            mktok(TokenKind::Title, mkloc(1, 40), mkloc(1, 45)),
-            mktok(TokenKind::By, mkloc(1, 46), mkloc(1, 48)),
+            Token {
+                kind: TokenKind::String("test".to_string()),
+                begin: Location { line: 1, col: 1 },
+                end: Location { line: 1, col: 6 },
+            },
+            Token {
+                kind: TokenKind::Number(10,),
+                begin: Location { line: 1, col: 7 },
+                end: Location { line: 1, col: 9 },
+            },
+            Token {
+                kind: TokenKind::LBrace,
+                begin: Location { line: 1, col: 10 },
+                end: Location { line: 1, col: 11 },
+            },
+            Token {
+                kind: TokenKind::Comma,
+                begin: Location { line: 1, col: 12 },
+                end: Location { line: 1, col: 13 },
+            },
+            Token {
+                kind: TokenKind::RBrace,
+                begin: Location { line: 1, col: 14 },
+                end: Location { line: 1, col: 15 },
+            },
+            Token {
+                kind: TokenKind::Question,
+                begin: Location { line: 2, col: 1 },
+                end: Location { line: 2, col: 9 },
+            },
+            Token {
+                kind: TokenKind::Answer,
+                begin: Location { line: 2, col: 10 },
+                end: Location { line: 2, col: 16 },
+            },
+            Token {
+                kind: TokenKind::Value,
+                begin: Location { line: 2, col: 17 },
+                end: Location { line: 2, col: 22 },
+            },
+            Token {
+                kind: TokenKind::Title,
+                begin: Location { line: 2, col: 23 },
+                end: Location { line: 2, col: 28 },
+            },
+            Token {
+                kind: TokenKind::Pass,
+                begin: Location { line: 2, col: 29 },
+                end: Location { line: 2, col: 33 },
+            },
+            Token {
+                kind: TokenKind::By,
+                begin: Location { line: 2, col: 34 },
+                end: Location { line: 2, col: 36 },
+            },
         ])
     );
 }
 
 #[test]
-fn parse_ify() {
+fn ast_ify() {
     assert_eq!(
         ast::ify(
             &mut ize(
                 "test.qq",
                 r#"title "test quiz" by "sarkar-segfault" pass 3
 
-                question "does life have any meaning?" {{
-	                answer {{
+                question "does life have any meaning?" {
+	                answer {
 		                "no"
-	                }}
+	                }
 	                value 3
-                }}
-                "#
+                }"#
             ),
             "test.qq"
         ),
         ast::Quiz {
             questions: vec![ast::Question {
                 answer: vec!["no".to_string()],
-                text: "does life have any meaning".to_string(),
+                text: "does life have any meaning?".to_string(),
                 value: 3
             }],
             metaline: ast::Metaline {
