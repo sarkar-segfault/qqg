@@ -108,7 +108,8 @@ fn ast_ify() {
 
                 question "does life have any meaning?" {
 	                answer {
-		                "no"
+		                "no",
+		                "yes" pass,
 	                }
 	                value 3
                 }"#
@@ -117,7 +118,10 @@ fn ast_ify() {
         ),
         ast::Quiz {
             questions: vec![ast::Question {
-                answer: vec!["no".to_string()],
+                answer: ast::Answer {
+                    answers: vec!["no".to_string(), "yes".to_string()],
+                    options: vec![2]
+                },
                 text: "does life have any meaning?".to_string(),
                 value: 3
             }],

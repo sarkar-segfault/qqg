@@ -2,8 +2,14 @@ use crate::parse_error;
 use crate::token::{Token, TokenKind, TokenStream};
 
 #[derive(Debug, Default, PartialEq, Eq)]
+pub struct Answer {
+    pub answers: Vec<String>,
+    pub options: Vec<usize>,
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct Question {
-    pub answer: Vec<String>,
+    pub answer: Answer,
     pub text: String,
     pub value: isize,
 }
@@ -83,9 +89,9 @@ fn next_number(tokens: &mut TokenStream, last: Token, file: &str) -> Token {
     }
 }
 
-fn ify_answer(tokens: &mut TokenStream, last: Token, file: &str) -> (Vec<String>, Token) {
+fn ify_answer(tokens: &mut TokenStream, last: Token, file: &str) -> (Answer, Token) {
     let mut stuff = next(tokens, file, last, TokenKind::LBrace);
-    let mut answer = Vec::<String>::new();
+    let mut answer = Answer::default();
 
     while let Some(token) = tokens.pop_front() {
         match token.kind {
@@ -94,13 +100,22 @@ fn ify_answer(tokens: &mut TokenStream, last: Token, file: &str) -> (Vec<String>
                 break;
             }
             TokenKind::String(ref s) => {
-                answer.push(s.to_string());
+                answer.answers.push(s.to_string());
                 stuff = token;
 
-                if let Some(tok) = tokens.front()
-                    && tok.kind == TokenKind::Comma
-                {
-                    stuff = tokens.pop_front().unwrap_or_else(|| unreachable!());
+                if let Some(tok) = tokens.front() {
+                    if tok.kind == TokenKind::Comma {
+                        stuff = tokens.pop_front().unwrap_or_else(|| unreachable!());
+                    } else if tok.kind == TokenKind::Pass {
+                        stuff = tokens.pop_front().unwrap_or_else(|| unreachable!());
+                        answer.options.push(answer.answers.len());
+
+                        if let Some(tok1) = tokens.front()
+                            && tok1.kind == TokenKind::Comma
+                        {
+                            stuff = tokens.pop_front().unwrap_or_else(|| unreachable!());
+                        }
+                    }
                 }
             }
             _ => parse_error!(
@@ -118,7 +133,7 @@ fn ify_answer(tokens: &mut TokenStream, last: Token, file: &str) -> (Vec<String>
         parse_error!(stuff, "encountered unterminated Answer directive", file);
     }
 
-    if answer.is_empty() {
+    if answer.answers.is_empty() {
         parse_error!(stuff, "expected String in Answer directive", file);
     }
 

@@ -22,6 +22,19 @@ pub fn start(quiz: Quiz) {
             color(Color::SuperCyan, &question.text),
             color(Color::Grey, &format!("[{}]", question.value))
         );
+
+        let is_option = !question.answer.options.is_empty();
+
+        if is_option {
+            for (index, answer) in question.answer.answers.iter().enumerate() {
+                println!(
+                    "{} {}",
+                    color(Color::Grey, &(index + 1).to_string()),
+                    color(Color::Yellow, answer)
+                )
+            }
+        }
+
         print!("{} ", color(Color::SuperCyan, "└─"));
         stdout().flush().unwrap_or_else(|e| {
             fatal!(
@@ -39,7 +52,33 @@ pub fn start(quiz: Quiz) {
         });
         answer = answer.trim().to_string();
 
-        if question.answer.contains(&answer) {
+        if is_option {
+            if question.answer.options.contains(
+                &answer
+                    .parse::<usize>()
+                    .unwrap_or_else(|e| fatal!("failed to parse number: {}", e)),
+            ) {
+                println!("{}\n", color(Color::Green, "correct answer!"));
+                score += question.value;
+            } else {
+                println!(
+                    "{} \n",
+                    color(
+                        Color::Red,
+                        &format!(
+                            "wrong answer!\n└─ expected options {}",
+                            question
+                                .answer
+                                .options
+                                .iter()
+                                .map(|n| n.to_string())
+                                .collect::<Vec<_>>()
+                                .join(" or ")
+                        )
+                    )
+                );
+            }
+        } else if question.answer.answers.contains(&answer) {
             println!("{}\n", color(Color::Green, "correct answer!"));
             score += question.value;
         } else {
@@ -51,6 +90,7 @@ pub fn start(quiz: Quiz) {
                         "wrong answer!\n└─ expected {}",
                         question
                             .answer
+                            .answers
                             .iter()
                             .map(|s| format!("\"{}\"", s))
                             .collect::<Vec<_>>()
@@ -58,7 +98,7 @@ pub fn start(quiz: Quiz) {
                     )
                 )
             );
-        }
+        };
     }
 
     let pass = score >= quiz.metaline.pass;

@@ -1,0 +1,11 @@
+title "many options" by "sarkar-segfault" pass 10
+
+question "what is 1 + 1? (banach-tarski thoerem included)" {
+	answer {
+		"3",
+		"0",
+		"1" pass,
+		"2" pass,
+	}
+	value 10
+}
