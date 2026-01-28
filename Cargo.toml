@@ -10,7 +10,7 @@ homepage = "https://crates.io/crates/quick-quiz-generator"
 documentation = "https://docs.rs/quick-quiz-generator"
 readme = "README.md"
 keywords = ["cli", "parser", "interactive", "text", "fun"]
-categories = ["command-line-utilities", "parser-implementations", "text-processing", "command-line-interface", "parsing"]
+categories = ["command-line-utilities", "parser-implementations", "text-processing"]
 default-run = "qqg"
 
 [[bin]]

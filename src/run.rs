@@ -19,7 +19,7 @@ pub fn start(quiz: Quiz) {
         total += question.value;
         println!(
             "{} {}",
-            color(Color::SuperCyan, &question.text),
+            color(Color::SuperCyan, &("┌ ".to_string() + &question.text)),
             color(Color::Grey, &format!("[{}]", question.value))
         );
 
@@ -35,7 +35,7 @@ pub fn start(quiz: Quiz) {
             }
         }
 
-        print!("{} ", color(Color::SuperCyan, "└─"));
+        print!("{} ", color(Color::SuperCyan, "└──"));
         stdout().flush().unwrap_or_else(|e| {
             fatal!(
                 "{}",
