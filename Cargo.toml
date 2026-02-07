@@ -2,7 +2,7 @@
 name = "quick-quiz-generator"
 edition = "2024"
 version = "2.1.0"
-authors = ["sarkar-segfault"]
+authors = ["sarkar-segfault <adhritsarkar@proton.me>"]
 description = "generate interactive quizzes blazingly fast, right in your terminal"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/sarkar-segfault/qqg"
