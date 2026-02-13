@@ -30,7 +30,7 @@ pub fn color(kind: Color, text: &str) -> String {
 macro_rules! fatal {
     ($($arg:tt)+) => {{
         eprintln!($($arg)+);
-        std::process::exit(0);
+        std::process::exit(1);
     }}
 }
 
