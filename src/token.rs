@@ -63,7 +63,13 @@ pub fn ize(file: &str, text: &str) -> TokenStream {
                 let mut closed = false;
 
                 for chr in chars.by_ref() {
-                    loc.col += 1;
+                    if chr == '\n' {
+                        loc.line += 1;
+                        loc.col = 1;
+                    } else {
+                        loc.col += 1;
+                    }
+
                     if chr == '"' {
                         closed = true;
                         break;
